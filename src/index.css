@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--cini-ink: #211a2d;
+	--cini-plum: #30233f;
+	--cini-amber: #f0a83a;
+	--cini-paper: #fbf8f2;
+}
+
+body {
+	background: var(--cini-paper);
+	color: var(--cini-ink);
+	font-family: Georgia, 'Times New Roman', serif;
+	overflow-x: hidden;
+	touch-action: pan-y;
+}
+
+button,
+input,
+select,
+textarea { font-family: inherit; }
+
+@keyframes cini-rise {
+	from { opacity: 0; transform: translateY(8px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+#root {
+  min-height: 100vh;
+  position: relative;
+  z-index: 0;
+  animation: cini-rise 420ms ease-out both;
+}
+
+main {
+	min-height: 100vh;
+	touch-action: pan-y;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+@media (max-width: 1023px) {
+  .fixed {
+    position: fixed;
+  }
+
+	html,
+	body,
+	* {
+		scrollbar-width: none;
+	}
+
+	html::-webkit-scrollbar,
+	body::-webkit-scrollbar,
+	*::-webkit-scrollbar {
+		display: none;
+	}
+}
