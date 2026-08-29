@@ -10,6 +10,8 @@ import {
   ChevronRight,
   MessageSquare,
   Sparkles,
+  PhoneCall,
+  Phone,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Ilan, RandevuWithRelations, Musteri, Gorev } from '@/lib/supabase';
