@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { Ilan, RandevuWithRelations } from '@/lib/supabase';
+import type { Ilan, RandevuWithRelations, Musteri, Gorev } from '@/lib/supabase';
 import { generateLocalAiForListing, getLocalAiAnalyses, getLocalAiAnalysis, type LocalAiAnalysis } from '@/lib/ai';
 import {
   TUR_LABELS,
@@ -45,6 +45,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [upcomingRandevular, setUpcomingRandevular] = useState<RandevuWithRelations[]>([]);
   const [recentAiAnalyses, setRecentAiAnalyses] = useState<LocalAiAnalysis[]>(() => getLocalAiAnalyses().slice(0, 4));
   const [generatingListingId, setGeneratingListingId] = useState<string | null>(null);
+  const [todayCalls, setTodayCalls] = useState<Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }>>([]);
 
   useEffect(() => {
     loadDashboard();
@@ -112,6 +113,80 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
       setRecentIlanlar(recentIlanRes.data || []);
       setUpcomingRandevular(upcomingRandevuRes.data || []);
+
+      // Bugün kimi aramalısın? verileri
+      const [
+        yeniMusterilerRes,
+        bugunRandevularRes,
+        gecmisGorevlerRes,
+        bugunGorevlerRes,
+      ] = await Promise.all([
+        supabase.from('musteriler').select('*').eq('durum', 'yeni').order('created_at', { ascending: false }).limit(8),
+        supabase.from('randevular').select('*, musteri:musteriler(*)').eq('tarih', today).neq('durum', 'iptal').order('saat', { ascending: true }).limit(8),
+        supabase.from('gorevler').select('*, musteri:musteriler(*)').eq('durum', 'acik').lt('son_tarih', today).not('musteri_id', 'is', null).order('son_tarih', { ascending: true }).limit(8),
+        supabase.from('gorevler').select('*, musteri:musteriler(*)').eq('durum', 'acik').eq('son_tarih', today).not('musteri_id', 'is', null).order('son_tarih', { ascending: true }).limit(8),
+      ]);
+
+      const callResults = [yeniMusterilerRes, bugunRandevularRes, gecmisGorevlerRes, bugunGorevlerRes];
+      const failedCall = callResults.find((result) => result.error);
+      if (failedCall?.error) throw failedCall.error;
+
+      const calls: Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }> = [];
+
+      // 1. Yeni müşteriler
+      (yeniMusterilerRes.data || []).forEach((m: Musteri) => {
+        calls.push({
+          id: `yeni-${m.id}`,
+          ad: m.ad_soyad,
+          telefon: m.telefon,
+          neden: 'Yeni müşteri',
+          musteriId: m.id,
+        });
+      });
+
+      // 2. Bugün planlanmış randevular
+      (bugunRandevularRes.data || []).forEach((r: RandevuWithRelations) => {
+        const m = r.musteri;
+        if (m) {
+          calls.push({
+            id: `randevu-${r.id}`,
+            ad: m.ad_soyad,
+            telefon: m.telefon,
+            neden: `Bugün randevu (${r.saat || 'saat belirtilmedi'})`,
+            musteriId: m.id,
+          });
+        }
+      });
+
+      // 3. Tarihi geçmiş açık görevler
+      (gecmisGorevlerRes.data || []).forEach((g: Gorev & { musteri?: Musteri | null }) => {
+        const m = g.musteri;
+        if (m) {
+          calls.push({
+            id: `gecmis-${g.id}`,
+            ad: m.ad_soyad,
+            telefon: m.telefon,
+            neden: `Gecikmiş görev: ${g.baslik}`,
+            musteriId: m.id,
+          });
+        }
+      });
+
+      // 4. Bugünkü açık görevler
+      (bugunGorevlerRes.data || []).forEach((g: Gorev & { musteri?: Musteri | null }) => {
+        const m = g.musteri;
+        if (m) {
+          calls.push({
+            id: `bugun-${g.id}`,
+            ad: m.ad_soyad,
+            telefon: m.telefon,
+            neden: `Bugün görev: ${g.baslik}`,
+            musteriId: m.id,
+          });
+        }
+      });
+
+      setTodayCalls(calls.slice(0, 8));
 
     } catch {
       setStats((s) => ({
@@ -190,6 +265,49 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="space-y-6">
+      {/* Bugün kimi aramalısın? */}
+      <section className="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <PhoneCall className="w-5 h-5 text-teal-500" />
+            <h2 className="font-bold text-slate-800">Bugün kimi aramalısın?</h2>
+          </div>
+          <span className="text-xs text-gray-400">{todayCalls.length} kayıt</span>
+        </div>
+        <div className="p-4 space-y-3">
+          {todayCalls.length === 0 ? (
+            <p className="text-gray-400 text-sm text-center py-8">Bugün için öneri yok</p>
+          ) : (
+            todayCalls.map((call) => (
+              <div key={call.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-800 truncate">{call.ad}</p>
+                  <p className="text-xs text-gray-500">{call.telefon}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{call.neden}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={`tel:${call.telefon}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-teal-700"
+                  >
+                    <Phone className="w-4 h-4" /> Ara
+                  </a>
+                  <button
+                    type="button"
+                    disabled={!call.telefon}
+                    onClick={() => openWhatsAppFollowUp(call.telefon, call.ad, call.neden, call.musteriId)}
+                    title={call.telefon ? 'WhatsApp mesajı aç' : 'Telefon numarası yok'}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                  >
+                    <MessageSquare className="w-4 h-4" /> WhatsApp
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
       <div>
         <h1 className="text-2xl font-bold text-slate-800">Ana Sayfa</h1>
         <p className="text-gray-500 text-sm mt-1">Emlak ofisinizin genel durumuna hızlı bakış</p>
