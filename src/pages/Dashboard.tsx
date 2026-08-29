@@ -28,6 +28,8 @@ import {
   getLocalTodayISO,
 } from '@/lib/constants';
 import type { Page } from '@/components/Layout';
+import Modal from '@/components/Modal';
+import type { GorevInput } from '@/lib/supabase';
 import Badge from '@/components/Badge';
 
 type DashboardProps = {
@@ -48,6 +50,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [recentAiAnalyses, setRecentAiAnalyses] = useState<LocalAiAnalysis[]>(() => getLocalAiAnalyses().slice(0, 4));
   const [generatingListingId, setGeneratingListingId] = useState<string | null>(null);
   const [todayCalls, setTodayCalls] = useState<Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }>>([]);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [followUpCall, setFollowUpCall] = useState<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string } | null>(null);
+  const [followUpResult, setFollowUpResult] = useState('');
+  const [followUpDate, setFollowUpDate] = useState('');
+  const [followUpCustomDate, setFollowUpCustomDate] = useState('');
 
   useEffect(() => {
     loadDashboard();
@@ -188,7 +195,29 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         }
       });
 
-      setTodayCalls(calls.slice(0, 8));
+      // Tekilleştir: aynı müşteriyi (musteriId varsa ona göre, yoksa telefon) birleştir
+      const uniqueCalls: Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }> = [];
+      const seen = new Map<string, number>(); // anahtar -> uniqueCalls index
+
+      for (const call of calls) {
+        const key = call.musteriId || call.telefon;
+        if (!key) {
+          // anahtar yoksa direkt ekle
+          uniqueCalls.push(call);
+          continue;
+        }
+        const existingIdx = seen.get(key);
+        if (existingIdx === undefined) {
+          seen.set(key, uniqueCalls.length);
+          uniqueCalls.push({ ...call });
+        } else {
+          // aynı anahtar varsa nedenleri birleştir
+          const existing = uniqueCalls[existingIdx];
+          existing.neden = `${existing.neden} · ${call.neden}`;
+        }
+      }
+
+      setTodayCalls(uniqueCalls.slice(0, 8));
 
     } catch {
       setStats((s) => ({
@@ -220,6 +249,60 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     await generateLocalAiForListing(id);
     setRecentAiAnalyses(getLocalAiAnalyses().slice(0, 4));
     setGeneratingListingId(null);
+  };
+
+  const handleFollowUpSave = async () => {
+    if (!followUpCall) return;
+    if (!followUpResult) {
+      alert('Lütfen sonuç seçin');
+      return;
+    }
+    let sonTarih = '';
+    if (followUpDate === 'yarin') {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      sonTarih = getLocalTodayISO(d);
+    } else if (followUpDate === '3gun') {
+      const d = new Date();
+      d.setDate(d.getDate() + 3);
+      sonTarih = getLocalTodayISO(d);
+    } else if (followUpDate === '1hafta') {
+      const d = new Date();
+      d.setDate(d.getDate() + 7);
+      sonTarih = getLocalTodayISO(d);
+    } else if (followUpDate === 'ozel') {
+      if (!followUpCustomDate) {
+        alert('Lütfen tarih seçin');
+        return;
+      }
+      sonTarih = followUpCustomDate;
+    } else {
+      alert('Lütfen takip tarihi seçin');
+      return;
+    }
+
+    const payload: GorevInput = {
+      baslik: `Takip: ${followUpCall.ad}`,
+      aciklama: `Sonuç: ${followUpResult}`,
+      son_tarih: sonTarih,
+      saat: '',
+      oncelik: 'orta',
+      durum: 'acik',
+      musteri_id: followUpCall.musteriId || null,
+      ilan_id: null,
+    };
+
+    const { error } = await supabase.from('gorevler').insert(payload);
+    if (error) {
+      alert(`Görev oluşturulamadı: ${error.message}`);
+    } else {
+      alert('Takip görevi oluşturuldu');
+      setFollowUpOpen(false);
+      setFollowUpCall(null);
+      setFollowUpResult('');
+      setFollowUpDate('');
+      setFollowUpCustomDate('');
+    }
   };
 
   const statCards = [
@@ -302,6 +385,16 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
                     <MessageSquare className="w-4 h-4" /> WhatsApp
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFollowUpCall(call);
+                      setFollowUpOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
+                  >
+                    Sonuç gir
                   </button>
                 </div>
               </div>
@@ -443,6 +536,70 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </section>
       )}
 
+      <Modal
+        open={followUpOpen}
+        onClose={() => setFollowUpOpen(false)}
+        title="Takip Sonucu"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sonuç</label>
+            <select
+              value={followUpResult}
+              onChange={(e) => setFollowUpResult(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+            >
+              <option value="">Seçiniz</option>
+              <option value="Ulaşamadım">Ulaşamadım</option>
+              <option value="Görüştüm">Görüştüm</option>
+              <option value="Randevu oluştu">Randevu oluştu</option>
+              <option value="İlgilenmiyor">İlgilenmiyor</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Takip tarihi</label>
+            <select
+              value={followUpDate}
+              onChange={(e) => setFollowUpDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+            >
+              <option value="">Seçiniz</option>
+              <option value="yarin">Yarın</option>
+              <option value="3gun">3 gün sonra</option>
+              <option value="1hafta">1 hafta sonra</option>
+              <option value="ozel">Tarih seç</option>
+            </select>
+          </div>
+          {followUpDate === 'ozel' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tarih</label>
+              <input
+                type="date"
+                value={followUpCustomDate}
+                onChange={(e) => setFollowUpCustomDate(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+            </div>
+          )}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setFollowUpOpen(false)}
+              className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
+            >
+              İptal
+            </button>
+            <button
+              type="button"
+              onClick={handleFollowUpSave}
+              className="flex-1 px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700"
+            >
+              Kaydet
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
