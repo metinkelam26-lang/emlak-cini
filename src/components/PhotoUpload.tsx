@@ -22,12 +22,38 @@ export default function PhotoUpload({ photos, onChange }: PhotoUploadProps) {
     let failedUploads = 0;
 
     try {
+      // 1. Authenticated kullanıcıyı al
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('Oturum açmanız gerekiyor.');
+        return;
+      }
+
+      // 2. Kullanıcının ofis_id değerini oku
+      const { data: officeRow, error: officeError } = await supabase
+        .from('ofis_uyeleri')
+        .select('ofis_id')
+        .eq('kullanici_id', user.id)
+        .maybeSingle();
+
+      if (officeError) {
+        setError('Ofis bilgisi alınamadı.');
+        return;
+      }
+
+      const officeId = officeRow?.ofis_id;
+      if (!officeId) {
+        setError('Ofis kaydı bulunamadı. Lütfen önce ofis oluşturun.');
+        return;
+      }
+
       for (const file of Array.from(files)) {
         if (!file.type.startsWith('image/')) continue;
 
         const fileExt = file.name.split('.').pop() || 'jpg';
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExt}`;
-        const filePath = `ilanlar/${fileName}`;
+        // 3. Upload path formatı: <ofis_uuid>/ilanlar/<filename>
+        const filePath = `${officeId}/ilanlar/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('ilan-fotograflari')
@@ -64,13 +90,20 @@ export default function PhotoUpload({ photos, onChange }: PhotoUploadProps) {
   };
 
   const handleRemove = async (index: number) => {
-    const photoPath = photos[index];
-    const newPath = photoPath.split('/').slice(-2).join('/');
+    const photoUrl = photos[index];
+    // 4. Public URL içindeki "/ilan-fotograflari/" sonrasını object path olarak kullan
+    const marker = '/ilan-fotograflari/';
+    const markerIndex = photoUrl.indexOf(marker);
+    if (markerIndex === -1) {
+      setError('Geçersiz fotoğraf URL formatı.');
+      return;
+    }
+    const objectPath = photoUrl.substring(markerIndex + marker.length);
 
     setError(null);
     const { error: removeError } = await supabase.storage
       .from('ilan-fotograflari')
-      .remove([newPath]);
+      .remove([objectPath]);
     if (removeError) {
       setError('Fotoğraf depolamadan silinemedi.');
       return;
