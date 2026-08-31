@@ -6,7 +6,6 @@ import {
   Users,
   CalendarDays,
   TrendingUp,
-  Clock,
   ChevronRight,
   MessageSquare,
   Sparkles,
@@ -14,15 +13,13 @@ import {
   Phone,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { Ilan, RandevuWithRelations } from '@/lib/supabase';
+import type { Ilan } from '@/lib/supabase';
 import { generateLocalAiForListing, getLocalAiAnalyses, getLocalAiAnalysis, type LocalAiAnalysis } from '@/lib/ai';
 import {
   TUR_LABELS,
   TUR_COLORS,
   ILAN_DURUM_LABELS,
   ILAN_DURUM_COLORS,
-  RANDEVU_DURUM_COLORS,
-  RANDEVU_DURUM_LABELS,
   formatTL,
   formatDateShort,
   getLocalTodayISO,
@@ -35,6 +32,20 @@ type DashboardProps = {
   onNavigate: (page: Page) => void;
 };
 
+type ActionItem = {
+  aksiyon_id: string;
+  aksiyon_tipi: 'takip' | 'randevu' | 'randevu_sonucu';
+  musteri_id: string | null;
+  randevu_id: string | null;
+  ad_soyad: string;
+  telefon: string;
+  baslik: string;
+  neden: string;
+  aksiyon_tarihi: string | null;
+  aksiyon_saati: string | null;
+  puan: number;
+};
+
 export default function Dashboard({ onNavigate }: DashboardProps) {
   const [stats, setStats] = useState({
     totalIlan: 0,
@@ -45,10 +56,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     loading: true,
   });
   const [recentIlanlar, setRecentIlanlar] = useState<Ilan[]>([]);
-  const [upcomingRandevular, setUpcomingRandevular] = useState<RandevuWithRelations[]>([]);
+  const [actionItems, setActionItems] = useState<ActionItem[]>([]);
   const [recentAiAnalyses, setRecentAiAnalyses] = useState<LocalAiAnalysis[]>(() => getLocalAiAnalyses().slice(0, 4));
   const [generatingListingId, setGeneratingListingId] = useState<string | null>(null);
-  const [todayCalls, setTodayCalls] = useState<Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }>>([]);
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [followUpCall, setFollowUpCall] = useState<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string } | null>(null);
   const [followUpResult, setFollowUpResult] = useState('');
@@ -77,7 +87,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         musteriRes,
         bugunRes,
         recentIlanRes,
-        upcomingRandevuRes,
       ] = await Promise.all([
           supabase.from('ilanlar').select('*', { count: 'exact', head: true }),
           supabase
@@ -98,17 +107,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             .select('*')
             .order('created_at', { ascending: false })
             .limit(6),
-          supabase
-            .from('randevular')
-            .select('*, musteri:musteriler(*), ilan:ilanlar(*)')
-            .gte('tarih', today)
-            .neq('durum', 'iptal')
-            .order('tarih', { ascending: true })
-            .order('saat', { ascending: true })
-            .limit(5),
         ]);
 
-      const coreResults = [ilanRes, satilikRes, kiralikRes, musteriRes, bugunRes, recentIlanRes, upcomingRandevuRes];
+      const coreResults = [ilanRes, satilikRes, kiralikRes, musteriRes, bugunRes, recentIlanRes];
       const failedResult = coreResults.find((result) => result.error);
       if (failedResult?.error) throw failedResult.error;
 
@@ -122,51 +123,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       });
 
       setRecentIlanlar(recentIlanRes.data || []);
-      setUpcomingRandevular(upcomingRandevuRes.data || []);
 
-      // Bugün kimi aramalısın? verileri - RPC kullan
-      const { data: rpcData, error: rpcError } = await supabase.rpc('bugun_aranacak_musteriler', {
-        p_limit: 8,
+      // Aksiyon Bekleyenler RPC
+      const { data: actionData, error: actionError } = await supabase.rpc('aksiyon_bekleyenler', {
+        p_limit: 30,
       });
 
-      if (rpcError) throw rpcError;
+      if (actionError) throw actionError;
 
-      if (!rpcData || rpcData.length === 0) {
-        setTodayCalls([]);
-      } else {
-        // RPC sonucundaki musteri_id'leri topla
-        const musteriIds = rpcData.map((row: { musteri_id: string }) => row.musteri_id);
-
-        // Müşteri bilgilerini çek
-        const { data: musterilerData, error: musterilerError } = await supabase
-          .from('musteriler')
-          .select('id, ad_soyad, telefon')
-          .in('id', musteriIds);
-
-        if (musterilerError) throw musterilerError;
-
-        // Map ile eşleştir
-        const musteriMap = new Map<string, { id: string; ad_soyad: string; telefon: string }>();
-        (musterilerData || []).forEach((m) => {
-          musteriMap.set(m.id, m);
-        });
-
-        // RPC sıralamasını koru
-        const calls: Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }> = rpcData.map(
-          (row: { musteri_id: string; neden: string }) => {
-            const musteri = musteriMap.get(row.musteri_id);
-            return {
-              id: `rpc-${row.musteri_id}`,
-              ad: musteri?.ad_soyad || 'Müşteri',
-              telefon: musteri?.telefon || '',
-              neden: row.neden || '',
-              musteriId: row.musteri_id,
-            };
-          },
-        );
-
-        setTodayCalls(calls);
-      }
+      setActionItems((actionData || []) as ActionItem[]);
 
     } catch {
       setStats((s) => ({
@@ -321,55 +286,80 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Bugün kimi aramalısın? */}
+      {/* Aksiyon Bekleyenler */}
       <section className="bg-white rounded-xl border border-gray-100 shadow-sm">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <PhoneCall className="w-5 h-5 text-teal-500" />
-            <h2 className="font-bold text-slate-800">Bugün kimi aramalısın?</h2>
+            <h2 className="font-bold text-slate-800">Aksiyon Bekleyenler</h2>
           </div>
-          <span className="text-xs text-gray-400">{todayCalls.length} kayıt</span>
+          <span className="text-xs text-gray-400">{actionItems.length} kayıt</span>
         </div>
         <div className="p-4 space-y-3">
-          {todayCalls.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-8">Bugün için öneri yok</p>
+          {actionItems.length === 0 ? (
+            <p className="text-gray-400 text-sm text-center py-8">Aksiyon bekleyen kayıt yok</p>
           ) : (
-            todayCalls.map((call) => (
-              <div key={call.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800 truncate">{call.ad}</p>
-                  <p className="text-xs text-gray-500">{call.telefon}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{call.neden}</p>
+            actionItems.map((item) => {
+              const isTakip = item.aksiyon_tipi === 'takip';
+              const isRandevu = item.aksiyon_tipi === 'randevu';
+              const isRandevuSonucu = item.aksiyon_tipi === 'randevu_sonucu';
+              const call = {
+                id: item.aksiyon_id,
+                ad: item.ad_soyad,
+                telefon: item.telefon,
+                neden: item.neden,
+                musteriId: item.musteri_id ?? undefined,
+              };
+              return (
+                <div key={item.aksiyon_id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{item.ad_soyad}</p>
+                      {isRandevu && <Badge label="Randevu" className="bg-sky-50 text-sky-700 border-sky-200" />}
+                      {isRandevuSonucu && <Badge label="Sonuç bekliyor" className="bg-amber-50 text-amber-700 border-amber-200" />}
+                    </div>
+                    <p className="text-xs text-gray-500">{item.telefon}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{item.baslik}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{item.neden}</p>
+                    {(item.aksiyon_tarihi || item.aksiyon_saati) && (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {item.aksiyon_tarihi ? formatDateShort(item.aksiyon_tarihi) : ''}
+                        {item.aksiyon_saati ? ` · ${item.aksiyon_saati}` : ''}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a
+                      href={`tel:${item.telefon}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-teal-700"
+                    >
+                      <Phone className="w-4 h-4" /> Ara
+                    </a>
+                    <button
+                      type="button"
+                      disabled={!item.telefon}
+                      onClick={() => openWhatsAppFollowUp(item.telefon, item.ad_soyad, item.neden, item.musteri_id ?? undefined)}
+                      title={item.telefon ? 'WhatsApp mesajı aç' : 'Telefon numarası yok'}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                    >
+                      <MessageSquare className="w-4 h-4" /> WhatsApp
+                    </button>
+                    {isTakip && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFollowUpCall(call);
+                          setFollowUpOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
+                      >
+                        Sonuç gir
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <a
-                    href={`tel:${call.telefon}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-teal-700"
-                  >
-                    <Phone className="w-4 h-4" /> Ara
-                  </a>
-                  <button
-                    type="button"
-                    disabled={!call.telefon}
-                    onClick={() => openWhatsAppFollowUp(call.telefon, call.ad, call.neden, call.musteriId)}
-                    title={call.telefon ? 'WhatsApp mesajı aç' : 'Telefon numarası yok'}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                  >
-                    <MessageSquare className="w-4 h-4" /> WhatsApp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFollowUpCall(call);
-                      setFollowUpOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
-                  >
-                    Sonuç gir
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
@@ -447,39 +437,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="w-5 h-5 text-sky-500" />
-              <h2 className="font-bold text-slate-800">Yaklaşan Randevular</h2>
-            </div>
-            <button onClick={() => onNavigate('randevular')} className="text-teal-600 text-sm font-medium hover:text-teal-700 flex items-center gap-1">
-              Tümü <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="p-4 space-y-3">
-            {upcomingRandevular.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-8">Yaklaşan randevu yok</p>
-            ) : upcomingRandevular.map((randevu) => {
-              const customer = randevu.musteri;
-              const detail = randevu.ilan?.baslik || randevu.randevu_notu || 'Randevu detayları';
-              return (
-                <div key={randevu.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100">
-                  <div className="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center shrink-0"><Clock className="w-5 h-5 text-sky-600" /></div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{customer?.ad_soyad || 'Müşteri belirtilmemiş'}</p>
-                    <p className="text-xs text-gray-500">{formatDateShort(randevu.tarih)} · {randevu.saat || 'Saat belirtilmedi'}</p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">{detail}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge label={RANDEVU_DURUM_LABELS[randevu.durum]} className={RANDEVU_DURUM_COLORS[randevu.durum]} />
-                    <button type="button" disabled={!customer?.telefon} onClick={() => openWhatsAppFollowUp(customer?.telefon || '', customer?.ad_soyad || 'müşterimiz', detail, customer?.id)} title={customer?.telefon ? 'WhatsApp takip mesajı aç' : 'Telefon numarası yok'} aria-label={`${customer?.ad_soyad || 'Müşteri'} için WhatsApp takip mesajı aç`} className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300"><MessageSquare className="w-4 h-4" /> WhatsApp ile Takip Et</button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        {/* Yaklaşan Randevular paneli kaldırıldı */}
       </div>
 
       {recentAiAnalyses.length > 0 && (
