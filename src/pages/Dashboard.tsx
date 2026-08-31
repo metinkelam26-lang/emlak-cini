@@ -14,7 +14,7 @@ import {
   Phone,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import type { Ilan, RandevuWithRelations, Musteri, Gorev } from '@/lib/supabase';
+import type { Ilan, RandevuWithRelations } from '@/lib/supabase';
 import { generateLocalAiForListing, getLocalAiAnalyses, getLocalAiAnalysis, type LocalAiAnalysis } from '@/lib/ai';
 import {
   TUR_LABELS,
@@ -123,101 +123,49 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       setRecentIlanlar(recentIlanRes.data || []);
       setUpcomingRandevular(upcomingRandevuRes.data || []);
 
-      // Bugün kimi aramalısın? verileri
-      const [
-        yeniMusterilerRes,
-        bugunRandevularRes,
-        gecmisGorevlerRes,
-        bugunGorevlerRes,
-      ] = await Promise.all([
-        supabase.from('musteriler').select('*').eq('durum', 'yeni').order('created_at', { ascending: false }).limit(8),
-        supabase.from('randevular').select('*, musteri:musteriler(*)').eq('tarih', today).neq('durum', 'iptal').order('saat', { ascending: true }).limit(8),
-        supabase.from('gorevler').select('*, musteri:musteriler(*)').eq('durum', 'acik').lt('son_tarih', today).not('musteri_id', 'is', null).order('son_tarih', { ascending: true }).limit(8),
-        supabase.from('gorevler').select('*, musteri:musteriler(*)').eq('durum', 'acik').eq('son_tarih', today).not('musteri_id', 'is', null).order('son_tarih', { ascending: true }).limit(8),
-      ]);
+      // Bugün kimi aramalısın? verileri - RPC kullan
+      const { data: rpcData, error: rpcError } = await supabase.rpc('bugun_aranacak_musteriler', {
+        p_limit: 8,
+      });
 
-      const callResults = [yeniMusterilerRes, bugunRandevularRes, gecmisGorevlerRes, bugunGorevlerRes];
-      const failedCall = callResults.find((result) => result.error);
-      if (failedCall?.error) throw failedCall.error;
+      if (rpcError) throw rpcError;
 
-      const calls: Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }> = [];
+      if (!rpcData || rpcData.length === 0) {
+        setTodayCalls([]);
+      } else {
+        // RPC sonucundaki musteri_id'leri topla
+        const musteriIds = rpcData.map((row: { musteri_id: string }) => row.musteri_id);
 
-      // 1. Yeni müşteriler
-      (yeniMusterilerRes.data || []).forEach((m: Musteri) => {
-        calls.push({
-          id: `yeni-${m.id}`,
-          ad: m.ad_soyad,
-          telefon: m.telefon,
-          neden: 'Yeni müşteri',
-          musteriId: m.id,
+        // Müşteri bilgilerini çek
+        const { data: musterilerData, error: musterilerError } = await supabase
+          .from('musteriler')
+          .select('id, ad_soyad, telefon')
+          .in('id', musteriIds);
+
+        if (musterilerError) throw musterilerError;
+
+        // Map ile eşleştir
+        const musteriMap = new Map<string, { id: string; ad_soyad: string; telefon: string }>();
+        (musterilerData || []).forEach((m) => {
+          musteriMap.set(m.id, m);
         });
-      });
 
-      // 2. Bugün planlanmış randevular
-      (bugunRandevularRes.data || []).forEach((r: RandevuWithRelations) => {
-        const m = r.musteri;
-        if (m) {
-          calls.push({
-            id: `randevu-${r.id}`,
-            ad: m.ad_soyad,
-            telefon: m.telefon,
-            neden: `Bugün randevu (${r.saat || 'saat belirtilmedi'})`,
-            musteriId: m.id,
-          });
-        }
-      });
+        // RPC sıralamasını koru
+        const calls: Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }> = rpcData.map(
+          (row: { musteri_id: string; neden: string }) => {
+            const musteri = musteriMap.get(row.musteri_id);
+            return {
+              id: `rpc-${row.musteri_id}`,
+              ad: musteri?.ad_soyad || 'Müşteri',
+              telefon: musteri?.telefon || '',
+              neden: row.neden || '',
+              musteriId: row.musteri_id,
+            };
+          },
+        );
 
-      // 3. Tarihi geçmiş açık görevler
-      (gecmisGorevlerRes.data || []).forEach((g: Gorev & { musteri?: Musteri | null }) => {
-        const m = g.musteri;
-        if (m) {
-          calls.push({
-            id: `gecmis-${g.id}`,
-            ad: m.ad_soyad,
-            telefon: m.telefon,
-            neden: `Gecikmiş görev: ${g.baslik}`,
-            musteriId: m.id,
-          });
-        }
-      });
-
-      // 4. Bugünkü açık görevler
-      (bugunGorevlerRes.data || []).forEach((g: Gorev & { musteri?: Musteri | null }) => {
-        const m = g.musteri;
-        if (m) {
-          calls.push({
-            id: `bugun-${g.id}`,
-            ad: m.ad_soyad,
-            telefon: m.telefon,
-            neden: `Bugün görev: ${g.baslik}`,
-            musteriId: m.id,
-          });
-        }
-      });
-
-      // Tekilleştir: aynı müşteriyi (musteriId varsa ona göre, yoksa telefon) birleştir
-      const uniqueCalls: Array<{ id: string; ad: string; telefon: string; neden: string; musteriId?: string }> = [];
-      const seen = new Map<string, number>(); // anahtar -> uniqueCalls index
-
-      for (const call of calls) {
-        const key = call.musteriId || call.telefon;
-        if (!key) {
-          // anahtar yoksa direkt ekle
-          uniqueCalls.push(call);
-          continue;
-        }
-        const existingIdx = seen.get(key);
-        if (existingIdx === undefined) {
-          seen.set(key, uniqueCalls.length);
-          uniqueCalls.push({ ...call });
-        } else {
-          // aynı anahtar varsa nedenleri birleştir
-          const existing = uniqueCalls[existingIdx];
-          existing.neden = `${existing.neden} · ${call.neden}`;
-        }
+        setTodayCalls(calls);
       }
-
-      setTodayCalls(uniqueCalls.slice(0, 8));
 
     } catch {
       setStats((s) => ({
