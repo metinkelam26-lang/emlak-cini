@@ -66,6 +66,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [followUpCustomDate, setFollowUpCustomDate] = useState('');
   const [followUpAppointmentDate, setFollowUpAppointmentDate] = useState('');
   const [followUpAppointmentTime, setFollowUpAppointmentTime] = useState('');
+  const [appointmentActionSaving, setAppointmentActionSaving] = useState<string | null>(null);
+  const [postponeOpen, setPostponeOpen] = useState(false);
+  const [postponeAppointmentId, setPostponeAppointmentId] = useState<string | null>(null);
+  const [postponeDate, setPostponeDate] = useState('');
+  const [postponeTime, setPostponeTime] = useState('');
 
   useEffect(() => {
     loadDashboard();
@@ -163,6 +168,60 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     await generateLocalAiForListing(id);
     setRecentAiAnalyses(getLocalAiAnalyses().slice(0, 4));
     setGeneratingListingId(null);
+  };
+
+  const handleAppointmentAction = async (
+    randevuId: string,
+    action: 'gorusuldu' | 'iptal'
+  ) => {
+    setAppointmentActionSaving(randevuId);
+    try {
+      const { error } = await supabase.rpc('randevu_aksiyonu_uygula', {
+        p_randevu_id: randevuId,
+        p_aksiyon: action,
+        p_yeni_tarih: null,
+        p_yeni_saat: null,
+      });
+      if (error) {
+        alert(`Randevu aksiyonu uygulanamadı: ${error.message}`);
+        return;
+      }
+      await loadDashboard();
+    } finally {
+      setAppointmentActionSaving(null);
+    }
+  };
+
+  const handlePostponeSave = async () => {
+    if (!postponeAppointmentId) return;
+    if (!postponeDate) {
+      alert('Lütfen yeni tarihi seçin');
+      return;
+    }
+    if (!postponeTime) {
+      alert('Lütfen yeni saati seçin');
+      return;
+    }
+    setAppointmentActionSaving(postponeAppointmentId);
+    try {
+      const { error } = await supabase.rpc('randevu_aksiyonu_uygula', {
+        p_randevu_id: postponeAppointmentId,
+        p_aksiyon: 'ertele',
+        p_yeni_tarih: postponeDate,
+        p_yeni_saat: postponeTime,
+      });
+      if (error) {
+        alert(`Randevu ertelenemedi: ${error.message}`);
+        return;
+      }
+      setPostponeOpen(false);
+      setPostponeAppointmentId(null);
+      setPostponeDate('');
+      setPostponeTime('');
+      await loadDashboard();
+    } finally {
+      setAppointmentActionSaving(null);
+    }
   };
 
   const handleFollowUpSave = async () => {
@@ -356,6 +415,40 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         Sonuç gir
                       </button>
                     )}
+                    {(isRandevu || isRandevuSonucu) && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={!item.randevu_id || appointmentActionSaving === item.randevu_id}
+                          onClick={() => item.randevu_id && handleAppointmentAction(item.randevu_id, 'gorusuldu')}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                        >
+                          Görüşüldü
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!item.randevu_id || appointmentActionSaving === item.randevu_id}
+                          onClick={() => {
+                            if (!item.randevu_id) return;
+                            setPostponeAppointmentId(item.randevu_id);
+                            setPostponeDate(item.aksiyon_tarihi || '');
+                            setPostponeTime(item.aksiyon_saati || '');
+                            setPostponeOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                        >
+                          Ertele
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!item.randevu_id || appointmentActionSaving === item.randevu_id}
+                          onClick={() => item.randevu_id && handleAppointmentAction(item.randevu_id, 'iptal')}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-2.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                        >
+                          İptal
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -464,6 +557,51 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
         </section>
       )}
+
+      <Modal
+        open={postponeOpen}
+        onClose={() => setPostponeOpen(false)}
+        title="Randevuyu Ertele"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Yeni tarih</label>
+            <input
+              type="date"
+              value={postponeDate}
+              onChange={(e) => setPostponeDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Yeni saat</label>
+            <input
+              type="time"
+              value={postponeTime}
+              onChange={(e) => setPostponeTime(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setPostponeOpen(false)}
+              className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
+            >
+              İptal
+            </button>
+            <button
+              type="button"
+              onClick={handlePostponeSave}
+              disabled={appointmentActionSaving === postponeAppointmentId}
+              className="flex-1 px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              Kaydet
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         open={followUpOpen}
