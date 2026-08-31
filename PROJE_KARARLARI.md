@@ -1,200 +1,590 @@
-PROJE KARARLARI
+# PROJE KARARLARI
+![Emlak CRM Yeni Mimari](docs/emlak_crm_yeni_mimari_v2.png)
 
-1. Ürün Kararları
+---
 
-Ürün Amacı
+## 1. Ürün Kararları
 
-Emlakçının müşteriyi, portföyü ve geri dönüşü unutmasını önleyen; bugün kiminle ilgilenmesi gerektiğini net biçimde söyleyen sade bir emlak CRM/asistanı.
+### Ürün Amacı
 
+Emlakçının müşteriyi, portföyü, randevuyu ve geri dönüşü unutmasını önleyen; bugün ne yapması gerektiğini net biçimde söyleyen sade bir emlak CRM / günlük satış asistanı.
 Ana ürün vaadi:
 
-“CRM sana sadece kayıt tutturmuyor; bugün kiminle ilgilenirsen satış ihtimalin daha yüksek, onu söylüyor.”
+> “CRM sana sadece kayıt tutturmuyor; bugün kiminle ilgilenirsen satış ihtimalin daha yüksek, onu söylüyor.”
 
-Sistemin Kalbi
+Ürün klasik bir kayıt yönetim sistemi olmaktan çok, emlakçının günlük iş akışını yönlendiren bir yardımcı olmalıdır.
 
-Ana soru:
+---
 
-“Bugün kimi ararsan para kazanma ihtimalin daha yüksek?”
+### Sistemin Ana Sorusu
 
-Sistem; müşteri, portföy, randevu, görev ve etkileşim verilerini bu soruya hizmet edecek şekilde düzenler.
+Ürünün cevaplaması gereken temel soru:
 
-Öncelik Motoru
+> “Şu anda ne yapmalıyım?”
 
-Varsayılan öncelik sırası:
+Bunun müşteri tarafındaki en önemli karşılığı:
 
-Yeni gelen müşteri
+> “Bugün kimi ararsam satış ihtimalim daha yüksek?”
 
-Yeni portföyle eşleşen müşteri
+Sistem; müşteri, portföy, randevu, takip, görev ve etkileşim verilerini bu sorulara hizmet edecek şekilde düzenlemelidir.
 
-Randevu sonrası geri dönüş bekleyen müşteri
+---
 
-Gecikmiş sıcak müşteri
+## 2. Ana Ürün Deneyimi
 
-Soğuk müşteri
+### Aksiyon Bekleyenler
 
-Bu sıra başlangıç iş kuralıdır. Gerçek kullanım verisine göre puanlama geliştirilebilir.
+Ürünün ana çalışma modeli klasik görev listesi değildir.
 
-Ana Bölümler
+Ana deneyim:
 
-Bugün
+> **Aksiyon Bekleyenler**
 
-Müşteriler
+Sistem, emlakçının ilgilenmesi gereken kayıtları tek bir öncelikli akışta toplar.
 
-Portföyler
+Bu akışta örnek olarak şunlar bulunabilir:
 
-Eşleşmeler
+- yeni müşteri
+- süresi gelen müşteri takibi
+- ulaşılamayan müşteri
+- yaklaşan randevu
+- geçmiş fakat sonucu girilmemiş randevu
+- ertelenmiş randevu
+- güçlü müşteri–ilan eşleşmesi
+- yeni portföyle eşleşen müşteri
+- uzun süredir temas edilmeyen sıcak müşteri
 
-Görevler, randevular, AI, WhatsApp ve Instagram ayrı birer ürün gibi büyütülmez; ilgili müşteri veya portföy akışının içinde kullanılır.
+Amaç kullanıcının farklı ekranlarda kayıt araması değil, sistemin doğru işi doğru zamanda önüne getirmesidir.
 
-Müşteri Merkezli Çalışma
+---
+
+### Ana UX İlkesi
+
+Emlakçı mümkün olduğunca:
+
+> **planlama yapmamalı, sonucu işaretlemelidir.**
+
+Örnek sonuçlar:
+
+- Ulaşamadım
+- Görüştüm
+- Randevu oluştu
+- Görüşüldü
+- Ertelendi
+- İptal
+- İlan gösterildi
+- Teklif verildi
+- İlgilenmiyor
+
+Bu sonuçlardan sonraki aksiyon sistem tarafından mümkün olduğunca otomatik belirlenmelidir.
+
+---
+
+### Minimum Veri Girişi
+
+Ürün kullanıcıdan gereksiz veri istememelidir.
+
+Sistem mümkün olduğunca mevcut verilerden yararlanır:
+
+- müşteri bilgileri
+- müşteri tercihleri
+- önceki görüşmeler
+- son etkileşim zamanı
+- randevu tarihi ve saati
+- görev / takip geçmişi
+- müşteri–ilan eşleşmeleri
+- portföy bilgileri
+- randevu durumu
+
+Kullanıcıdan yalnızca olayın sonucunu veya gerçekten bilinmesi gereken yeni bilgiyi istemek tercih edilir.
+
+Örnek:
+
+Müşteriyle görüşüldüyse kullanıcıya yeni görev formu açılmaz.
+
+Kullanıcı sadece:
+
+> Görüştüm
+
+der.
+
+Sistem:
+
+- son etkileşimi günceller
+- müşteri önceliğini günceller
+- gerekiyorsa sonraki takip tarihini oluşturur
+- zamanı geldiğinde müşteriyi yeniden Aksiyon Bekleyenler'e getirir
+
+---
+
+### Mobil Kullanım İlkesi
+
+Ürün özellikle telefon kullanımında küçük form alanları ve çok sayıda seçenekle kullanıcıyı yormamalıdır.
+
+Normal işlemler mümkün olduğunca:
+
+> **1–2 dokunuşta tamamlanmalıdır.**
+
+Tarih, saat, öncelik ve detay alanları yalnızca gerektiğinde gösterilmelidir.
+
+Örneğin:
+
+**Randevu kartı**
+
+Ahmet Yılmaz  
+Bugün 14:30
+
+Aksiyonlar:
+
+- Ara
+- WhatsApp
+- Görüşüldü
+- Ertele
+- İptal
+
+`Ertele` seçilmediği sürece tarih/saat seçici açılmamalıdır.
+
+---
+
+## 3. Sistem Önerir, Kullanıcı Gerekirse Düzeltir
+
+Varsayılan yaklaşım:
+
+> **Sistem önerir → kullanıcı gerekirse değiştirir.**
+
+Örneğin:
+
+- Ulaşamadım → varsayılan olarak yarın tekrar ara
+- Görüştüm → varsayılan olarak birkaç gün sonra takip
+- Randevu oluştu → randevu öncesi teyit
+- Randevu geçti → sonucu sor
+- Yeni güçlü eşleşme → ilanı göster
+- Uzun süredir temas yok → tekrar gündeme getir
+
+Ancak kullanıcı özel bir durum varsa varsayılanı değiştirebilmelidir.
+
+Örnek:
+
+Müşteri:
+
+> “Beni iki hafta sonra ara.”
+
+derse emlakçı varsayılan takip tarihini değiştirebilir.
+
+---
+
+## 4. Öncelik Motoru
+
+Başlangıç öncelik sırası:
+
+1. Yeni gelen müşteri
+2. Yeni portföyle güçlü eşleşen müşteri
+3. Yaklaşan / sonucu bekleyen randevu
+4. Randevu sonrası geri dönüş bekleyen müşteri
+5. Gecikmiş sıcak müşteri
+6. Süresi gelen normal takip
+7. Uzun süredir temas edilmeyen müşteri
+8. Soğuk müşteri
+
+Bu sıra başlangıç iş kuralıdır.
+
+Gerçek kullanım verisine göre daha sonra puanlama geliştirilebilir.
+
+İlk aşamada puanlama deterministik olmalıdır.
+
+---
+
+## 5. Ana Bölümler
+
+Ürünün kullanıcıya görünen temel bölümleri mümkün olduğunca sınırlı tutulur.
+
+Ana bölümler:
+
+- Bugün / Aksiyon Bekleyenler
+- Müşteriler
+- Portföyler
+- Eşleşmeler
+
+Görevler, randevular, AI, WhatsApp ve Instagram ayrı birer ürün gibi büyütülmez.
+
+Bunlar mümkün olduğunca ilgili müşteri, portföy veya aksiyon akışının içinde kullanılır.
+
+---
+
+## 6. Görevler ve Takipler
+
+`gorevler` tablosu teknik altyapıda kullanılabilir.
+
+Ancak kullanıcıya klasik görev yönetim sistemi gibi sunulmamalıdır.
+
+Görev altyapısının amacı:
+
+- sonraki müşteri takibini saklamak
+- gecikmiş işlemleri bulmak
+- Aksiyon Bekleyenler kuyruğunu beslemek
+- geçmiş aksiyonları takip etmek
+
+Kullanıcı tarafında ürün dili “görev yönetimi” yerine mümkün olduğunca:
+
+- aksiyon
+- takip
+- sıradaki işlem
+- ilgilenilecek müşteri
+
+mantığına yakın olmalıdır.
+
+---
+
+## 7. Randevu Deneyimi
+
+Randevu yalnızca kayıt olarak tutulmamalı, aksiyon üretmelidir.
+
+Randevu durumları örnek olarak:
+
+- planlandı
+- gerçekleşti
+- ertelendi
+- iptal
+
+Yaklaşan randevu Aksiyon Bekleyenler'de görünmelidir.
+
+Randevu kartından mümkün olduğunca doğrudan:
+
+- Ara
+- WhatsApp
+- Görüşüldü
+- Ertele
+- İptal
+
+işlemleri yapılabilmelidir.
+
+Randevu ertelendiğinde kullanıcı müşteriyi tekrar bulmak zorunda kalmamalıdır.
+
+Sistem mevcut randevuyu doğrudan güncellemelidir.
+
+Randevu zamanı geçtiği halde sonuç girilmediyse sistem:
+
+> “Randevu sonucu girilmedi.”
+
+şeklinde tekrar aksiyon oluşturmalıdır.
+
+---
+
+## 8. Müşteri–Portföy Eşleşmesi
+
+Müşteri–ilan eşleşmesi ilk fazda deterministik çalışmalıdır.
+
+Temel kriterler:
+
+- ilan tipi
+- bütçe
+- ilçe
+- mahalle
+- oda sayısı
+- metrekare
+
+Aktif olmayan ilanlar eşleşmeye dahil edilmez.
+
+Müşterinin ilan tercihi mevcutsa yanlış ilan tipi eşleşmeye dahil edilmez.
+
+Eksik müşteri kriterleri ücretsiz puan üretmemelidir.
+
+Eşleşme puanı ve eşleşme nedenleri backend / SQL tarafında hesaplanmalıdır.
+
+Frontend ayrı bir eşleşme algoritması taşımamalıdır.
+
+Tek kaynak prensibi uygulanmalıdır.
+
+Güçlü eşleşme yalnızca rapor olarak gösterilmemeli, gerektiğinde aksiyona dönüşmelidir.
+
+Örnek:
+
+> “Bu müşteriye yeni uygun ilan bulundu.”
+
+Aksiyon:
+
+- İlanı Göster
+- WhatsApp
+- Sonra Hatırlat
+
+---
+
+## 9. Müşteri Merkezli Çalışma
 
 Her müşterinin mümkün olduğunca şu bilgileri net olmalıdır:
 
-mevcut durum
+- mevcut durum
+- sıcaklık / öncelik
+- sonraki aksiyon
+- sonraki aksiyon tarihi
+- son etkileşim zamanı
+- ilgili portföyler
+- randevu geçmişi
+- takip geçmişi
+- gösterilen ilanlar
+- teklif geçmişi
+- sorumlu kullanıcı / ofis
 
-sıcaklık / öncelik
+Aksiyon Bekleyenler ekranı bu verilerden üretilmelidir.
 
-bir sonraki işlem
+---
 
-bir sonraki işlem tarihi
+## 10. AI Kullanım Kararı
 
-sorumlu kullanıcı / ofis
+### İlk Faz
 
-ilgili portföyler
+İlk fazda AI ürünün çekirdeğinde kullanılmayacaktır.
 
-son görüşme / etkileşim
+Çekirdek CRM:
 
-randevu ve görev geçmişi
+> **AI olmadan tam çalışmalıdır.**
 
-“Bugün” ekranı bu bilgilerden üretilmelidir.
+İlk fazda şu işler deterministik kurallarla çözülür:
 
-Ürün Basitliği
+- müşteri önceliklendirme
+- bugün aranacak müşteriler
+- takip tarihi oluşturma
+- randevu akışı
+- randevu çakışma kontrolü
+- müşteri–ilan eşleşmesi
+- gecikmiş aksiyonlar
+- geçmiş randevu sonucu
+- güçlü eşleşmenin aksiyona dönüştürülmesi
 
-Kullanıcı ilk bakışta şu üç sorunun cevabını görmelidir:
+Basit `if/else`, SQL ve iş kurallarıyla çözülebilecek işler için AI maliyeti oluşturulmaz.
 
-Kimi aramalıyım?
+---
 
-Neden aramalıyım?
+### AI'nın Gelecekteki Rolü
 
-Sonraki işlem ne zaman?
+AI daha sonra verimlilik ve yorumlama katmanı olarak eklenebilir.
 
-Detaylar gerektiğinde açılır.
+AI şu alanlarda değer üretebilir:
 
-AI Kullanım Kararı
+- serbest metin müşteri notlarını anlamlandırma
+- görüşme notlarını özetleme
+- müşteri niyetini yorumlama
+- kişiselleştirilmiş mesaj önerisi
+- müşteri–ilan eşleşmesini doğal dille açıklama
+- istisnai durumlarda sonraki aksiyon önerisi
+- “neden bugün ara?” açıklaması
+- satış temsilcisine kişiselleştirilmiş öneri
 
-AI ürünün çekirdeği değil, verimlilik katmanıdır.
+AI sistemin icra katmanı değildir.
 
-Sistem AI olmadan da tam çalışmalıdır.
+Örnek:
 
-AI yalnızca ölçülebilir zaman kazancı, karar kalitesi veya satış ihtimali artışı sağladığı akışlarda kullanılmalıdır.
+AI:
 
-AI şu işlerde kullanılabilir:
+> “Bu müşteriyi yarın aramak mantıklı.”
 
-müşteri önceliğini açıklama
+Sistem:
 
-müşteri–ilan eşleşmesini yorumlama
+- yetkiyi kontrol eder
+- tarihi doğrular
+- takip kaydını oluşturur
 
-görüşme / mesaj önerisi üretme
+---
 
-randevu sonrası takip önerisi
+### AI'nın Yapmaması Gerekenler
 
-ilan veya müşteri analizini özetleme
+AI:
 
-“neden bugün ara?” açıklaması üretme
+- temel CRM akışını kendisine bağımlı hale getirmemeli
+- tenant güvenliğine karar vermemeli
+- veritabanı bütünlüğünü yönetmemeli
+- randevu çakışmasını tek başına değerlendirmemeli
+- kayıt silme/güncelleme yetkisini belirlememeli
+- frontend'de gizli API anahtarı kullanmamalı
+- doğrulanmamış AI çıktısını gerçek veri gibi kaydetmemeli
+- her ekran açılışında otomatik maliyet üretmemeli
 
-AI şu işleri yapmamalıdır:
+AI başarısız olduğunda çekirdek CRM çalışmaya devam etmelidir.
 
-temel CRM akışını AI’a bağımlı hale getirmemeli
+---
 
-her ekran açılışında otomatik çağrı yapmamalı
+## 11. Ürün Konumlandırması
 
-aynı veri için tekrar tekrar ücret üretmemeli
+Rakiplerle yarışma stratejisi:
 
-frontend içinde gizli API anahtarı bulundurmamalı
+> **Daha fazla özellik değil, daha az sürtünme.**
 
-AI sonucunu doğrulanmış veri gibi kabul etmemeli
+TapyPro ve benzeri ürünler şu alanlarda güçlüdür:
 
-AI maliyet ve operasyon ilkesi:
+- müşteri takibi
+- müşteri–portföy eşleşmesi
+- satış pipeline
+- hatırlatmalar
+- ekip yönetimi
+- geniş CRM özellikleri
 
-model/API maliyeti izlenir
+Bizim farkımız yalnızca bu özelliklere sahip olmak değildir.
 
-Edge Function / backend maliyeti hesaba katılır
+Farkımız:
 
-timeout, hata ve fallback mekanizması bulunur
+- daha az form
+- daha az menü
+- daha az manuel planlama
+- daha az kayıt arama
+- daha fazla otomatik aksiyon
+- daha fazla tek dokunuşlu işlem
+- mobil kullanım kolaylığı
+- “şimdi ne yapmalıyım?” sorusuna doğrudan cevap
 
-uygun sonuçlar cache’lenir
+Ürün yönü:
 
-veri değişmediyse tekrar analiz üretilmez
+> **“Emlakçının CRM'i değil, günlük satış asistanı.”**
 
-temel sıralama ve eşleştirme mümkün olduğunca SQL/kurallarla yapılır
+Rakiplerin yaptığı özellikleri körü körüne çoğaltmak yerine kullanıcının günlük iş yükü hedeflenir.
 
-AI başarısız olduğunda çekirdek CRM çalışmaya devam eder
+---
 
-temel ürün fiyatlandırması AI olmadan da sürdürülebilir olmalıdır
+## 12. Ürün Başarı Ölçütleri
 
-2. Teknik Mimari Kararları
+Ürünün işe yarayıp yaramadığı yalnızca özellik sayısıyla ölçülmez.
 
-Temel Veri Yapısı
+Takip edilmesi gereken temel ürün metrikleri:
+
+- bir aksiyonun kaç dokunuşta tamamlandığı
+- manuel tarih / saat giriş oranı
+- takipsiz kalan müşteri sayısı
+- gecikmiş takip sayısı
+- sonucu girilmemiş randevu sayısı
+- güçlü eşleşmelerden gösterime dönüşenlerin oranı
+- gösterimden teklife dönüşüm
+- yeni müşteriye ilk temas süresi
+- günlük tamamlanan aksiyon sayısı
+
+Ana UX hedefi:
+
+> Normal işlemlerin büyük çoğunluğu 1–2 dokunuşta tamamlanmalıdır.
+
+---
+
+# 13. Teknik Mimari Kararları
+
+## Temel Veri Yapısı
 
 Ana tablolar:
 
-ofisler
-
-ofis_uyeleri
-
-musteriler
-
-ilanlar
-
-randevular
-
-gorevler
-
-musteri_ilan_etkilesimleri
-
-ai_analizler
+- ofisler
+- ofis_uyeleri
+- musteriler
+- ilanlar
+- randevular
+- gorevler
+- musteri_ilan_etkilesimleri
+- ai_analizler
 
 Temel ilişki:
 
-Ofis → Kullanıcı → Müşteri / Portföy → Randevu / Görev / Etkileşim / AI
+> Ofis → Kullanıcı → Müşteri / Portföy → Randevu / Takip / Etkileşim
 
-Ofis / Tenant İzolasyonu
+AI verileri çekirdek veri modelinin dışında ek katmandır.
+
+---
+
+## 14. Deterministik Çekirdek
+
+Ana iş kuralları mümkün olduğunca PostgreSQL / SQL / RPC katmanında uygulanır.
+
+Örnekler:
+
+- bugün aranacak müşteri
+- aksiyon önceliği
+- sonraki takip
+- randevu oluşturma
+- randevu çakışması
+- müşteri–ilan eşleşmesi
+- ofis erişimi
+- veri bütünlüğü
+
+Frontend iş kuralının ikinci bir kopyasını taşımamalıdır.
+
+Aynı iş kuralı birden fazla yerde tekrar edilmemelidir.
+
+Tek kaynak prensibi tercih edilir.
+
+---
+
+## 15. Aksiyon Motoru
+
+Uzun vadeli ana backend yapısı:
+
+> `aksiyon_bekleyenler`
+
+mantığıdır.
+
+Bu katman farklı veri kaynaklarını tek kuyrukta birleştirebilir:
+
+- müşteriler
+- takipler / görevler
+- randevular
+- müşteri–ilan eşleşmeleri
+- geçmiş etkileşimler
+
+İlk fazda event bus, message queue veya ağır worker mimarisi kurulmaz.
+
+PostgreSQL + RPC mevcut ihtiyaç için yeterlidir.
+
+Zaman bazlı aksiyonlar ilk aşamada sorgu sırasında hesaplanabilir.
+
+Gerçek background scheduler yalnızca ihtiyaç oluşursa eklenir.
+
+---
+
+## 16. Ofis / Tenant İzolasyonu
 
 Her ana iş tablosu ofis bağlamında çalışır.
 
-Kullanıcı yalnızca üyesi olduğu ofislerin verilerine erişebilir.
+Kullanıcı yalnızca üyesi olduğu ofisin verilerine erişebilir.
 
 RLS temel veri güvenliği katmanıdır.
 
-USING (true) / WITH CHECK (true) ile global authenticated erişim bırakılmaz.
+`USING (true)` / `WITH CHECK (true)` ile global authenticated erişim bırakılmaz.
 
 Cross-office ilişki kurulmasına izin verilmez.
 
 Normal istemciler tenant sınırını aşamaz.
 
-Auth ve Yetki
+MVP'de kullanıcı tek ofise bağlıdır.
+
+---
+
+## 17. Auth ve Yetki
 
 Roller:
 
-sahip
-
-yonetici
-
-uye
+- sahip
+- yonetici
+- uye
 
 Kurallar:
 
-görüntüleme ve düzenleme ofis üyeliğine göre
+- görüntüleme ve düzenleme ofis üyeliğine göre yapılır
+- kritik silme / yönetim işlemleri role göre sınırlandırılır
+- normal üyeye gereksiz geniş yetki verilmez
+- SECURITY DEFINER fonksiyonları minimum yetkiyle çalışır
+- PUBLIC / anon execute yetkileri açık bırakılmaz
 
-kritik silme/yönetim işlemleri role göre
+---
 
-normal üyeye gereksiz geniş yetki verilmez
+## 18. SECURITY DEFINER / RPC Güvenliği
 
-SECURITY DEFINER fonksiyonları minimum yetkiyle çalışır
+Fonksiyonlarda mümkün olduğunda:
 
-PUBLIC / anon execute yetkileri açık bırakılmaz
+- `SECURITY INVOKER` tercih edilir
+- SECURITY DEFINER yalnızca gerçekten gerektiğinde kullanılır
+- `search_path` açıkça belirlenir
+- PUBLIC execute kapatılır
+- anon execute kapatılır
+- authenticated için yalnızca gerekli fonksiyonlara izin verilir
 
-Storage
+Fonksiyonlar tenant sınırını aşamaz.
+
+---
+
+## 19. Storage
 
 İlan fotoğrafları Supabase Storage kullanabilir.
 
@@ -204,156 +594,273 @@ Upload / update / delete yalnızca yetkili authenticated kullanıcıya açık ol
 
 Başka ofisin ilan fotoğrafı değiştirilemez veya silinemez.
 
-Dosya yolu ilan/ofis ilişkisini doğrulamaya uygun tutulur.
+Storage yolu ofis izolasyonuna uygun tutulur.
 
-Veri Bütünlüğü
+Tercih edilen yapı:
 
-Veritabanı yalnızca veri saklamaz; hatalı ilişkiyi engeller.
+> `<ofis_id>/ilanlar/<dosya>`
+
+Legacy dosyalar sessizce taşınmaz.
+
+---
+
+## 20. Veri Bütünlüğü
+
+Veritabanı yalnızca veri saklamaz; hatalı ilişkiyi de engeller.
 
 Kontrol edilmesi gereken başlıca kurallar:
 
-bütçe min/max mantığı
+- bütçe min/max mantığı
+- m² min/max mantığı
+- geçersiz tarih/saat
+- randevu çakışması
+- geçersiz durum değerleri
+- geçersiz rol değerleri
+- geçersiz aksiyon değerleri
+- cross-office müşteri ilişkisi
+- cross-office ilan ilişkisi
+- cross-office randevu ilişkisi
+- cross-office görev ilişkisi
+- duplicate kayıtların kontrollü yönetimi
+- gerekli foreign key
+- gerekli unique constraint
+- gerekli check constraint
 
-m² min/max mantığı
+---
 
-geçersiz tarih/saat engeli
+## 21. Randevu Bütünlüğü
 
-geçersiz durum/rol/aksiyon değerleri engeli
+Randevu oluşturma mümkün olduğunca atomik yapılır.
 
-cross-office müşteri/ilan/randevu/görev ilişkisi engeli
+Aynı ofiste aynı tarih ve saatte planlanmış randevu bulunması kontrol edilir.
 
-duplicate kayıtların kontrollü yönetimi
+Takip sonucundan randevu oluşuyorsa:
 
-gerekli foreign key, unique ve check constraint’leri
+- müşteri güncellemesi
+- ilgili takip değişikliği
+- randevu oluşturma
 
-Performans
+tek transaction içinde gerçekleştirilmelidir.
+
+İşlem başarısız olursa yarım kayıt bırakılmamalıdır.
+
+---
+
+## 22. Performans
 
 Indexler gerçek sorgulara göre tasarlanır.
 
-Öncelik:
+Öncelikli sorgular:
 
-ofis_id ile başlayan tenant-aware indexler
-
-Bugün ekranı
-
-açık/gecikmiş görevler
-
-yaklaşan randevular
-
-müşteri–ilan eşleşmeleri
-
-müşteri/ilan geçmişi
+- ofis bazlı sorgular
+- Aksiyon Bekleyenler
+- bugün aranacak müşteriler
+- açık / gecikmiş takipler
+- yaklaşan randevular
+- müşteri–ilan eşleşmeleri
+- müşteri geçmişi
+- ilan geçmişi
+- etkileşim geçmişi
 
 Gereksiz tek kolon indexleri yerine ihtiyaca göre composite veya partial index tercih edilir.
 
-Migration Stratejisi
+---
 
-Eski uygulanmış migration dosyaları değiştirilmez.
+## 23. Migration Stratejisi
+
+Uygulanmış migration dosyaları değiştirilmez.
 
 Yeni değişiklikler yeni migration ile yapılır.
 
-Migration veri silmemelidir.
+Migration geçmişi append-only kabul edilir.
 
-Legacy veri sessizce dönüştürülmez.
+Yeni migration:
+
+- veri silmemelidir
+- legacy veriyi sessizce dönüştürmemelidir
+- tehlikeli backfill yapmamalıdır
+- tenant sınırlarını bozmamalıdır
+- production'a uygulanmadan önce dry-run yapılmalıdır
 
 Riskli backfill işlemleri kullanıcı çağrılı RPC içine konmaz.
 
-Production’a uygulanmadan önce migration ayrıca gözden geçirilir.
+Production'a uygulanmadan önce migration ayrıca gözden geçirilir.
 
-Geliştirme Stratejisi
+---
+
+## 24. Production Değişiklik İlkesi
+
+Production etkili işlemlerde sıralama:
+
+1. mevcut durumu kontrol et
+2. riski değerlendir
+3. en küçük değişikliği hazırla
+4. local migration oluştur
+5. diff / SQL kontrolü yap
+6. dry-run çalıştır
+7. kullanıcı onayı
+8. production push
+9. davranışı doğrula
+
+Destructive işlem varsayılan değildir.
+
+---
+
+## 25. Geliştirme Stratejisi
 
 Varsayılan akış:
 
-Analiz et
+1. Analiz et
+2. Problemi sınıflandır
+3. En küçük güvenli değişikliği seç
+4. Gerekirse schema / veri yapısını kontrol et
+5. Aider'a dar görev ver
+6. Diff kontrol et
+7. TypeScript / ESLint / build çalıştır
+8. Davranışı test et
+9. Sonraki göreve geç
 
-Problemi sınıflandır
+Büyük refactor yasak değildir.
 
-En küçük güvenli değişikliği seç
+Ancak yalnızca açık, ölçülebilir faydası varsa yapılır.
 
-Aider’a dar görev ver
+---
 
-TypeScript / ESLint / build çalıştır
-
-Sonucu incele
-
-Sonraki göreve geç
-
-Büyük refactor yasak değildir; yalnızca açık ve ölçülebilir fayda varsa yapılır.
-
-Aider Kullanım Kuralı
+## 26. Aider Kullanım Kuralı
 
 Aider:
 
-geniş kapsamlı analiz yapabilir
+- geniş kapsamlı analiz yapabilir
+- kod değişikliklerini küçük ve doğrulanabilir adımlarla uygular
+- mümkün olduğunca yalnızca belirtilen dosyalara dokunur
+- uygulanmış migration geçmişini yeniden yazmaz
+- `.env`, API key, service role key gibi secret'lara dokunmaz
+- destructive SQL çalıştırmaz
+- production etkili Supabase komutlarını kullanıcı adına otomatik çalıştırmaz
+- büyük refactor'u açık talep olmadan yapmaz
 
-kod değişikliklerini küçük ve doğrulanabilir adımlarla uygular
+Aider otomatik commit atarsa commit ayrıca kontrol edilir.
 
-eski migration geçmişini yeniden yazmaz
+---
 
-.env, API key, service role key gibi secret’lara dokunmaz
+## 27. Doğrulama
 
-supabase db push, db reset, destructive SQL gibi işlemleri otomatik çalıştırmaz
+Her anlamlı değişiklikten sonra mümkün olduğunca:
 
-production etkili komutlarda kullanıcı onayı bekler
+- `git diff`
+- `git status`
+- build
+- TypeScript kontrolü
+- migration dry-run
+- gerçek kullanıcı akışı testi
 
-Öncelik Seviyeleri
+yapılır.
 
-P0 — Güvenlik / Veri Kaybı
+Bilinen bağımsız hatalar yeni değişikliğin hatası gibi değerlendirilmez.
 
-tenant/ofis izolasyonu
+Build uyarıları ile gerçek build hataları birbirinden ayrılır.
 
-RLS
+---
 
-Storage yetkileri
+## 28. Öncelik Seviyeleri
 
-SECURITY DEFINER
+### P0 — Güvenlik / Veri Kaybı
 
-yanlış ofise veri bağlama
+- tenant / ofis izolasyonu
+- RLS
+- Storage yetkileri
+- SECURITY DEFINER
+- yanlış ofise veri bağlama
+- anon erişimi
+- veri silme riski
+- cross-office veri bütünlüğü
 
-anon erişimi
+### P1 — CRM Çekirdeği
 
-veri silme riski
+- Aksiyon Bekleyenler
+- Bugün ekranı
+- sonraki aksiyon
+- sonraki aksiyon tarihi
+- müşteri öncelik motoru
+- müşteri–portföy eşleşmesi
+- randevu oluşturma
+- randevu erteleme
+- randevu sonrası takip
+- geçmiş randevu sonucu
+- hızlı aksiyonlar
 
-P1 — CRM Çekirdeği
+### P2 — Veri Kalitesi / Performans
 
-Bugün ekranı
+- indexler
+- constraint'ler
+- duplicate kontrolü
+- veri tipleri
+- sorgu optimizasyonu
+- aksiyon kuyruğu performansı
+- mobil UX iyileştirmeleri
 
-sonraki işlem
+### P3 — Entegrasyon / İleri Özellikler
 
-sonraki işlem tarihi
+- WhatsApp
+- Instagram
+- ilan paylaşımı
+- otomasyonlar
+- AI iyileştirmeleri
+- AI destekli açıklamalar
+- AI destekli serbest metin analizi
 
-müşteri öncelik motoru
+---
 
-müşteri–portföy eşleşmesi
+## 29. Ana Ürün İlkesi
 
-randevu sonrası takip
+Her yeni özellik için şu soru sorulur:
 
-P2 — Veri Kalitesi / Performans
+> “Bu özellik emlakçının daha hızlı satış yapmasına, müşteriyi unutmamasına, doğru portföyü daha hızlı bulmasına veya takibi daha kolay yapmasına yardım ediyor mu?”
 
-indexler
+Cevap net değilse özellik öncelikli değildir.
 
-constraint’ler
+---
 
-duplicate kontrolü
+## 30. Ana UX İlkesi
 
-veri tipleri
+Her yeni ekran ve işlem için şu soru sorulur:
 
-sorgu optimizasyonu
+> “Emlakçı bunu telefonda koştururken rahatça kullanabilir mi?”
 
-P3 — Geliştirme / Entegrasyon
+Normal bir işlem:
 
-AI iyileştirmeleri
+- müşteri aratmayı
+- farklı menülere gitmeyi
+- gereksiz form doldurmayı
+- tekrar tekrar aynı bilgiyi girmeyi
 
-WhatsApp
+gerektiriyorsa akış yeniden tasarlanmalıdır.
 
-Instagram
+---
 
-ilan paylaşımı
-
-otomasyonlar
-
-Ana Teknik İlke
+## 31. Ana Teknik İlke
 
 Mevcut çalışan yapıyı koruyarak mümkün olan en küçük, güvenli ve ölçülebilir değişiklik yapılır.
 
-Güvenlik veya veri bütünlüğü sorunu varsa gerekli Supabase / RLS / Storage / Auth / schema değişiklikleri yapılabilir; ancak önce etkisi analiz edilir ve yeni migration ile uygulanır.
+Güvenlik veya veri bütünlüğü sorunu varsa gerekli Supabase / RLS / Storage / Auth / schema değişiklikleri yapılabilir.
+
+Ancak:
+
+- önce etkisi analiz edilir
+- yeni migration ile uygulanır
+- production öncesi doğrulanır
+- mümkün olduğunca geri alınabilir ve atomik tutulur
+
+---
+
+## 32. Nihai Ürün Yönü
+
+Ürün yalnızca kayıt tutan bir CRM olmayacaktır.
+
+Hedef:
+
+> Müşterileri, portföyleri, randevuları ve takipleri arkada düzenleyen; emlakçıya önde yalnızca sıradaki doğru işi gösteren günlük satış asistanı.
+
+Kullanıcı sisteme hizmet etmemelidir.
+
+> **Sistem kullanıcıya hizmet etmelidir.**
