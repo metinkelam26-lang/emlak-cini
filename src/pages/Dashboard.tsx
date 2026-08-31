@@ -29,7 +29,6 @@ import {
 } from '@/lib/constants';
 import type { Page } from '@/components/Layout';
 import Modal from '@/components/Modal';
-import type { GorevInput } from '@/lib/supabase';
 import Badge from '@/components/Badge';
 
 type DashboardProps = {
@@ -229,28 +228,29 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       return;
     }
 
-    const payload: GorevInput = {
-      baslik: `Takip: ${followUpCall.ad}`,
-      aciklama: `Sonuç: ${followUpResult}`,
-      son_tarih: sonTarih,
-      saat: '',
-      oncelik: 'orta',
-      durum: 'acik',
-      musteri_id: followUpCall.musteriId || null,
-      ilan_id: null,
-    };
-
-    const { error } = await supabase.from('gorevler').insert(payload);
-    if (error) {
-      alert(`Görev oluşturulamadı: ${error.message}`);
-    } else {
-      alert('Takip görevi oluşturuldu');
-      setFollowUpOpen(false);
-      setFollowUpCall(null);
-      setFollowUpResult('');
-      setFollowUpDate('');
-      setFollowUpCustomDate('');
+    if (!followUpCall.musteriId) {
+      alert('Müşteri ID bulunamadı. Takip sonucu kaydedilemedi.');
+      return;
     }
+
+    const { error } = await supabase.rpc('takip_sonucu_kaydet', {
+      p_musteri_id: followUpCall.musteriId,
+      p_sonuc: followUpResult,
+      p_son_tarih: sonTarih,
+    });
+
+    if (error) {
+      alert(`Takip sonucu kaydedilemedi: ${error.message}`);
+      return;
+    }
+
+    alert('Takip sonucu kaydedildi');
+    setFollowUpOpen(false);
+    setFollowUpCall(null);
+    setFollowUpResult('');
+    setFollowUpDate('');
+    setFollowUpCustomDate('');
+    await loadDashboard();
   };
 
   const statCards = [
