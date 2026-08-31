@@ -54,6 +54,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [followUpResult, setFollowUpResult] = useState('');
   const [followUpDate, setFollowUpDate] = useState('');
   const [followUpCustomDate, setFollowUpCustomDate] = useState('');
+  const [followUpAppointmentDate, setFollowUpAppointmentDate] = useState('');
+  const [followUpAppointmentTime, setFollowUpAppointmentTime] = useState('');
 
   useEffect(() => {
     loadDashboard();
@@ -233,10 +235,29 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       return;
     }
 
+    if (followUpResult === 'Randevu oluştu') {
+      if (!followUpAppointmentDate) {
+        alert('Lütfen randevu tarihi seçin');
+        return;
+      }
+      if (!followUpAppointmentTime) {
+        alert('Lütfen randevu saati seçin');
+        return;
+      }
+    }
+
     const { error } = await supabase.rpc('takip_sonucu_kaydet', {
       p_musteri_id: followUpCall.musteriId,
       p_sonuc: followUpResult,
       p_son_tarih: sonTarih,
+      p_randevu_tarihi:
+        followUpResult === 'Randevu oluştu'
+          ? followUpAppointmentDate
+          : null,
+      p_randevu_saat:
+        followUpResult === 'Randevu oluştu'
+          ? followUpAppointmentTime
+          : null,
     });
 
     if (error) {
@@ -250,6 +271,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     setFollowUpResult('');
     setFollowUpDate('');
     setFollowUpCustomDate('');
+    setFollowUpAppointmentDate('');
+    setFollowUpAppointmentTime('');
     await loadDashboard();
   };
 
@@ -529,6 +552,28 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
               />
             </div>
+          )}
+          {followUpResult === 'Randevu oluştu' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Randevu tarihi</label>
+                <input
+                  type="date"
+                  value={followUpAppointmentDate}
+                  onChange={(e) => setFollowUpAppointmentDate(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Randevu saati</label>
+                <input
+                  type="time"
+                  value={followUpAppointmentTime}
+                  onChange={(e) => setFollowUpAppointmentTime(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                />
+              </div>
+            </>
           )}
           <div className="flex gap-3 pt-2">
             <button
