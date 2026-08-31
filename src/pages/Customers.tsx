@@ -33,7 +33,7 @@ import {
   formatDate,
   normalizeSearchText,
 } from '@/lib/constants';
-import { getMatches, getMatchLabel, getMatchBadgeClass } from '@/lib/matching';
+import { getMatchLabel, getMatchBadgeClass } from '@/lib/matching';
 import Modal from '@/components/Modal';
 import Badge from '@/components/Badge';
 import ConfirmDialog from '@/components/ConfirmDialog';
@@ -77,6 +77,11 @@ export default function Customers() {
   const [matchModalOpen, setMatchModalOpen] = useState(false);
   const [matchMusteri, setMatchMusteri] = useState<Musteri | null>(null);
   const [allIlanlar, setAllIlanlar] = useState<Ilan[]>([]);
+  const [rpcMatchResults, setRpcMatchResults] = useState<Array<{
+    ilan_id: string;
+    eslesme_puani: number;
+    eslesme_nedenleri: string[];
+  }>>([]);
   const [matchLoading, setMatchLoading] = useState(false);
   const [interactionSaving, setInteractionSaving] = useState<string | null>(null);
   const [interactionMessage, setInteractionMessage] = useState<string | null>(null);
@@ -206,21 +211,75 @@ export default function Customers() {
     setMatchMusteri(m);
     setMatchModalOpen(true);
     setMatchLoading(true);
-    const { data, error: matchError } = await supabase
+    const { data: rpcData, error: rpcError } = await supabase.rpc('musteriye_uygun_ilanlar', {
+      p_musteri_id: m.id,
+      p_limit: 20,
+    });
+    if (rpcError) {
+      setError(rpcError.message);
+      setAllIlanlar([]);
+      setRpcMatchResults([]);
+      setMatchLoading(false);
+      return;
+    }
+
+    if (!rpcData || rpcData.length === 0) {
+      setAllIlanlar([]);
+      setRpcMatchResults([]);
+      setMatchLoading(false);
+      return;
+    }
+
+    // RPC sonucundaki ilan_id'leri topla
+    const ilanIds = rpcData.map((row: { ilan_id: string }) => row.ilan_id);
+
+    // İlanları tam kayıt olarak çek
+    const { data: ilanlarData, error: ilanlarError } = await supabase
       .from('ilanlar')
       .select('*')
-      .eq('durum', 'aktif')
-      .order('created_at', { ascending: false });
-    if (matchError) {
-      setError(matchError.message);
+      .in('id', ilanIds);
+
+    if (ilanlarError) {
+      setError(ilanlarError.message);
       setAllIlanlar([]);
-    } else {
-      setAllIlanlar(data || []);
+      setRpcMatchResults([]);
+      setMatchLoading(false);
+      return;
     }
+
+    // Map ile eşleştir
+    const ilanMap = new Map<string, Ilan>();
+    (ilanlarData || []).forEach((ilan) => {
+      ilanMap.set(ilan.id, ilan);
+    });
+
+    // RPC sıralamasını koru
+    const matchedIlanlar: Ilan[] = rpcData
+      .map((row: { ilan_id: string }) => ilanMap.get(row.ilan_id))
+      .filter((ilan): ilan is Ilan => ilan !== undefined);
+
+    setAllIlanlar(matchedIlanlar);
+    setRpcMatchResults(rpcData);
     setMatchLoading(false);
   };
 
-  const matchResults = matchMusteri ? getMatches(matchMusteri, allIlanlar) : [];
+  const matchResults = matchMusteri
+    ? allIlanlar.map((ilan) => {
+        const rpcRow = rpcMatchResults.find((row) => row.ilan_id === ilan.id);
+        const score = rpcRow?.eslesme_puani ?? 0;
+        const reasons = (rpcRow?.eslesme_nedenleri ?? []).map((label: string) => ({
+          label,
+          met: true,
+        }));
+        return {
+          ilan,
+          score,
+          reasons,
+          budgetDistance: 0,
+          areaDistance: 0,
+        };
+      })
+    : [];
 
   const recordInteraction = async (ilanId: string, aksiyon: 'gosterildi' | 'teklif_edildi') => {
     if (!matchMusteri) return;
