@@ -55,8 +55,15 @@ function parseCsv(text: string) {
 }
 
 function parseNumber(value: string) {
-  const cleaned = value.replace(/\s/g, '').replace(/\.(?=\d{3}(?:\D|$))/g, '').replace(',', '.');
-  const parsed = Number(cleaned);
+  const cleaned = value.replace(/[^0-9.,\s-]/g, '').replace(/\s/g, '');
+  if (!cleaned) return 0;
+  const lastSeparatorIndex = Math.max(cleaned.lastIndexOf('.'), cleaned.lastIndexOf(','));
+  const tail = lastSeparatorIndex === -1 ? '' : cleaned.slice(lastSeparatorIndex + 1);
+  // Son ayirac 1-2 rakamla bitiyorsa ondalik kabul edilir; aksi halde tum nokta/virguller binlik ayiracidir.
+  const normalized = /^\d{1,2}$/.test(tail)
+    ? `${cleaned.slice(0, lastSeparatorIndex).replace(/[.,]/g, '')}.${tail}`
+    : cleaned.replace(/[.,]/g, '');
+  const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
