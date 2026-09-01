@@ -657,9 +657,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 <Sparkles className="w-5 h-5 text-indigo-500" />
                 <h2 className="font-bold text-slate-800 text-base">Son AI Çıktıları</h2>
               </div>
-              <button onClick={() => onNavigate('ai-otopilot')} className="text-teal-600 text-sm font-semibold hover:text-teal-700 flex items-center gap-1">
-                Otopilot <ChevronRight className="w-4 h-4" />
-              </button>
             </div>
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
               {recentAiAnalyses.map((analysis) => (
