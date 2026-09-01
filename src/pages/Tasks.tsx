@@ -12,6 +12,9 @@ import {
   CheckCircle2,
   Circle,
   AlertTriangle,
+  PhoneCall,
+  CalendarClock,
+  StickyNote,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { GorevWithRelations, GorevInput, Musteri, Ilan } from '@/lib/supabase';
@@ -26,6 +29,7 @@ import {
 import Modal from '@/components/Modal';
 import Badge from '@/components/Badge';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import type { Page } from '@/components/Layout';
 
 const emptyForm: GorevInput = {
   baslik: '',
@@ -38,7 +42,14 @@ const emptyForm: GorevInput = {
   ilan_id: null,
 };
 
-export default function Tasks() {
+// "+ Ekle" seçim ekranındaki görev türleri; gorevler tablosunda karşılığı yoktur, sadece varsayılan alan ataması içindir.
+type TaskKind = 'takip' | 'not';
+
+type TasksProps = {
+  onNavigate: (page: Page) => void;
+};
+
+export default function Tasks({ onNavigate }: TasksProps) {
   const [gorevler, setGorevler] = useState<GorevWithRelations[]>([]);
   const [musteriler, setMusteriler] = useState<Musteri[]>([]);
   const [ilanlar, setIlanlar] = useState<Ilan[]>([]);
@@ -49,6 +60,8 @@ export default function Tasks() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [taskKind, setTaskKind] = useState<TaskKind | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<GorevInput>(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -104,10 +117,25 @@ export default function Tasks() {
   const kapanan = filteredGorevler.filter((g) => g.durum !== 'acik');
 
   const handleOpenAdd = () => {
-    setForm({ ...emptyForm, son_tarih: getLocalTodayISO() });
+    setPickerOpen(true);
+  };
+
+  const handleSelectKind = (kind: TaskKind) => {
+    setForm({
+      ...emptyForm,
+      son_tarih: getLocalTodayISO(),
+      oncelik: kind === 'takip' ? 'orta' : 'dusuk',
+    });
+    setTaskKind(kind);
     setEditId(null);
     setFormError(null);
+    setPickerOpen(false);
     setModalOpen(true);
+  };
+
+  const handleSelectRandevu = () => {
+    setPickerOpen(false);
+    onNavigate('randevular');
   };
 
   const applyQuickTemplate = (template: string) => {
@@ -128,6 +156,7 @@ export default function Tasks() {
       musteri_id: g.musteri_id,
       ilan_id: g.ilan_id,
     });
+    setTaskKind(null);
     setEditId(g.id);
     setFormError(null);
     setModalOpen(true);
@@ -220,7 +249,7 @@ export default function Tasks() {
           className="flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5" />
-          Yeni Görev
+          + Ekle
         </button>
       </div>
 
@@ -232,8 +261,7 @@ export default function Tasks() {
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
           <Plus className="w-4 h-4" />
         </span>
-        <span className="hidden sm:inline">Görev Ekle</span>
-        <span className="sm:hidden">Ekle</span>
+        <span>+ Ekle</span>
       </button>
 
       {error && (
@@ -343,10 +371,64 @@ export default function Tasks() {
         </>
       )}
 
+      <Modal open={pickerOpen} onClose={() => setPickerOpen(false)} title="Ne eklemek istiyorsun?" size="sm">
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => handleSelectKind('takip')}
+            className="flex w-full items-center gap-3 rounded-xl border border-gray-200 p-4 text-left transition-colors hover:border-teal-300 hover:bg-teal-50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
+              <PhoneCall className="w-5 h-5" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-slate-800">Takip oluştur</span>
+              <span className="block text-xs text-gray-500">Müşteri veya ilan için hatırlatma görevi</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSelectRandevu}
+            className="flex w-full items-center gap-3 rounded-xl border border-gray-200 p-4 text-left transition-colors hover:border-teal-300 hover:bg-teal-50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+              <CalendarClock className="w-5 h-5" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-slate-800">Randevu oluştur</span>
+              <span className="block text-xs text-gray-500">Randevular sayfasına yönlendirir</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelectKind('not')}
+            className="flex w-full items-center gap-3 rounded-xl border border-gray-200 p-4 text-left transition-colors hover:border-teal-300 hover:bg-teal-50"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+              <StickyNote className="w-5 h-5" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-slate-800">Not / iş hatırlatması oluştur</span>
+              <span className="block text-xs text-gray-500">Bağımsız hatırlatma notu</span>
+            </span>
+          </button>
+        </div>
+      </Modal>
+
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editId ? 'Görevi Düzenle' : 'Yeni Görev'}
+        title={
+          editId
+            ? 'Görevi Düzenle'
+            : taskKind === 'takip'
+              ? 'Takip oluştur'
+              : taskKind === 'not'
+                ? 'Not / iş hatırlatması oluştur'
+                : 'Yeni Görev'
+        }
         size="md"
       >
         {formError && (

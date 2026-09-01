@@ -70,7 +70,7 @@ export default function App() {
       case 'randevular':
         return <Appointments />;
       case 'gorevler':
-        return <Tasks />;
+        return <Tasks onNavigate={setCurrentPage} />;
       case 'ai-otopilot':
         return <AiAutopilot />;
       case 'entegrasyon':
