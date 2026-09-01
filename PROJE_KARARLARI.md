@@ -43,6 +43,4 @@
 - Her kod değişikliğinden sonra build çalıştırılır.
 - Aider kullanılmayacak; Windows Uygulama Denetimi `_ctypes` DLL yüklemesini engelliyor.
 
-3. `PROJE_KARARLARI.md` dosyasının en üstüne şu kısa notu ekle:
-> Arşiv notu — 01.09.2026’den itibaren tek güncel referans `PROJE_REFERANSI.md` dosyasıdır. Bu dosya eski kararları korur.
 
