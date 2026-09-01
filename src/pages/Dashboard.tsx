@@ -34,7 +34,7 @@ type DashboardProps = {
 
 type ActionItem = {
   aksiyon_id: string;
-  aksiyon_tipi: 'takip' | 'randevu' | 'randevu_sonucu';
+  aksiyon_tipi: 'takip' | 'randevu' | 'randevu_sonucu' | 'eslesme';
   musteri_id: string | null;
   randevu_id: string | null;
   ad_soyad: string;
@@ -44,6 +44,7 @@ type ActionItem = {
   aksiyon_tarihi: string | null;
   aksiyon_saati: string | null;
   puan: number;
+  ilan_id: string | null;
 };
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
@@ -71,6 +72,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [postponeAppointmentId, setPostponeAppointmentId] = useState<string | null>(null);
   const [postponeDate, setPostponeDate] = useState('');
   const [postponeTime, setPostponeTime] = useState('');
+  const [matchActionSaving, setMatchActionSaving] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboard();
@@ -161,6 +163,32 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     
     // Mevcut sayfada açarak pop-up engeline takılmayı önler
     window.open(link, '_blank');
+  };
+
+  const openWhatsAppMatch = (telefon: string, musteriAdi: string, ilanBasligi: string) => {
+    if (!telefon) return;
+    const temizTel = "90" + telefon.replace(/\s+/g, '').replace(/^0/, '').replace(/^\+90/, '');
+    const mesaj = `Merhaba ${musteriAdi}, size uygun olabileceğini düşündüğüm bir ilan var: ${ilanBasligi}. Detaylarını paylaşabilirim.`;
+    window.open(`https://wa.me/${temizTel}?text=${encodeURIComponent(mesaj)}`, '_blank');
+  };
+
+  const handleMarkListingShown = async (item: ActionItem) => {
+    if (!item.musteri_id || !item.ilan_id) return;
+    setMatchActionSaving(item.aksiyon_id);
+    try {
+      const { error } = await supabase.from('musteri_ilan_etkilesimleri').insert({
+        musteri_id: item.musteri_id,
+        ilan_id: item.ilan_id,
+        aksiyon: 'gosterildi',
+      });
+      if (error) {
+        alert(`İlan gösterildi olarak işaretlenemedi: ${error.message}`);
+        return;
+      }
+      await loadDashboard();
+    } finally {
+      setMatchActionSaving(null);
+    }
   };
 
   const handleGenerateListingText = async (id: string) => {
@@ -382,6 +410,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               const isTakip = item.aksiyon_tipi === 'takip';
               const isRandevu = item.aksiyon_tipi === 'randevu';
               const isRandevuSonucu = item.aksiyon_tipi === 'randevu_sonucu';
+              const isEslesme = item.aksiyon_tipi === 'eslesme';
               const call = {
                 id: item.aksiyon_id,
                 ad: item.ad_soyad,
@@ -415,6 +444,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                             Sonuç Bekliyor
                           </span>
                         )}
+                        {isEslesme && (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
+                            Güçlü Eşleşme
+                          </span>
+                        )}
                       </div>
 
                       <p className="text-sm font-semibold text-slate-600 flex items-center gap-2">
@@ -445,7 +479,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                       <button
                         type="button"
                         disabled={!item.telefon}
-                        onClick={() => openWhatsAppFollowUp(item.telefon, item.ad_soyad, item.neden, item.musteri_id ?? undefined)}
+                        onClick={() =>
+                          isEslesme
+                            ? openWhatsAppMatch(item.telefon, item.ad_soyad, item.baslik)
+                            : openWhatsAppFollowUp(item.telefon, item.ad_soyad, item.neden, item.musteri_id ?? undefined)
+                        }
                         title={item.telefon ? 'WhatsApp mesajı aç' : 'Telefon numarası yok'}
                         className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300 transition-colors active:scale-95"
                       >
@@ -462,6 +500,17 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 transition-colors active:scale-95"
                         >
                           Sonuç gir
+                        </button>
+                      )}
+
+                      {isEslesme && (
+                        <button
+                          type="button"
+                          disabled={!item.ilan_id || matchActionSaving === item.aksiyon_id}
+                          onClick={() => handleMarkListingShown(item)}
+                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-gray-300 transition-colors active:scale-95"
+                        >
+                          İlanı gösterdim
                         </button>
                       )}
 
