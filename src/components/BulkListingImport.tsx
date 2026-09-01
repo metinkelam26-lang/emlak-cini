@@ -29,8 +29,8 @@ const aliases: Record<string, string> = {
   durum: 'durum', status: 'durum',
 };
 
-const listingKey = (listing: Pick<IlanInput, 'baslik' | 'ilce' | 'mahalle' | 'fiyat'>) =>
-  [listing.baslik, listing.ilce, listing.mahalle, listing.fiyat].map((value) => String(value).trim().toLocaleLowerCase('tr-TR')).join('|');
+const listingKey = (listing: Pick<IlanInput, 'baslik' | 'tur' | 'il' | 'ilce' | 'mahalle'>) =>
+  [listing.baslik, listing.tur, listing.il, listing.ilce, listing.mahalle].map((value) => String(value).trim().toLocaleLowerCase('tr-TR')).join('|');
 
 function parseCsv(text: string) {
   const rows: string[][] = [];
@@ -97,7 +97,11 @@ export default function BulkListingImport({ onClose, onImported, existingListing
       const { read, utils } = await import(/* @vite-ignore */ xlsxUrl);
       const workbook = read(await file.arrayBuffer(), { type: 'array' });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      parsed = firstSheet ? utils.sheet_to_json<string[]>(firstSheet, { header: 1, raw: false, defval: '' }) : [];
+      const sheetRows = firstSheet
+        ? utils.sheet_to_json<unknown[]>(firstSheet, { header: 1, raw: true, defval: '' })
+        : [];
+      // raw:true TL/m² gibi hucre bicimlendirmelerini atlar; toRow'a girmeden guvenli metne cevrilir.
+      parsed = sheetRows.map((sheetRow) => sheetRow.map((value) => String(value ?? '')));
     } else {
       parsed = parseCsv(await file.text());
     }
