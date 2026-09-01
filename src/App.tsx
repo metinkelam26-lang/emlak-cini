@@ -17,6 +17,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [workspaceReady, setWorkspaceReady] = useState(false);
+  const [autoOpenAppointmentForm, setAutoOpenAppointmentForm] = useState(false);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthLoading(false); });
@@ -68,9 +69,21 @@ export default function App() {
       case 'musteriler':
         return <Customers />;
       case 'randevular':
-        return <Appointments />;
+        return (
+          <Appointments
+            autoOpenCreate={autoOpenAppointmentForm}
+            onAutoOpenHandled={() => setAutoOpenAppointmentForm(false)}
+          />
+        );
       case 'gorevler':
-        return <Tasks onNavigate={setCurrentPage} />;
+        return (
+          <Tasks
+            onNavigate={(page) => {
+              if (page === 'randevular') setAutoOpenAppointmentForm(true);
+              setCurrentPage(page);
+            }}
+          />
+        );
       case 'ai-otopilot':
         return <AiAutopilot />;
       case 'entegrasyon':

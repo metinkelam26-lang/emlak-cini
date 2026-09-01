@@ -24,7 +24,13 @@ function getWhatsAppNumber(phone: string) {
 	return `90${digits.replace(/^0/, '')}`;
 }
 
-export default function Appointments() {
+type AppointmentsProps = {
+	/** Tasks.tsx “Randevu oluştur” seçimiyle tek seferlik form açma sinyali. */
+	autoOpenCreate?: boolean;
+	onAutoOpenHandled?: () => void;
+};
+
+export default function Appointments({ autoOpenCreate, onAutoOpenHandled }: AppointmentsProps) {
 	const [randevular, setRandevular] = useState<RandevuWithRelations[]>([]);
 	const [musteriler, setMusteriler] = useState<Musteri[]>([]);
 	const [ilanlar, setIlanlar] = useState<Ilan[]>([]);
@@ -82,6 +88,13 @@ export default function Appointments() {
 		setFormError(null);
 		setModalOpen(true);
 	};
+
+	useEffect(() => {
+		if (!autoOpenCreate) return;
+		handleOpenAdd();
+		onAutoOpenHandled?.();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [autoOpenCreate]);
 
 	const handleOpenEdit = (randevu: RandevuWithRelations) => {
 		setForm({ musteri_id: randevu.musteri_id, ilan_id: randevu.ilan_id, tarih: randevu.tarih, saat: randevu.saat, randevu_notu: randevu.randevu_notu, durum: randevu.durum });
