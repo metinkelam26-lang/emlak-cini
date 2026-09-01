@@ -18,6 +18,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [workspaceReady, setWorkspaceReady] = useState(false);
   const [autoOpenAppointmentForm, setAutoOpenAppointmentForm] = useState(false);
+  const [autoOpenTaskPicker, setAutoOpenTaskPicker] = useState(false);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthLoading(false); });
@@ -78,6 +79,8 @@ export default function App() {
       case 'gorevler':
         return (
           <Tasks
+            autoOpenPicker={autoOpenTaskPicker}
+            onAutoOpenHandled={() => setAutoOpenTaskPicker(false)}
             onNavigate={(page) => {
               if (page === 'randevular') setAutoOpenAppointmentForm(true);
               setCurrentPage(page);
@@ -100,6 +103,10 @@ export default function App() {
     <Layout
       currentPage={currentPage}
       onNavigate={setCurrentPage}
+      onOpenAdd={() => {
+        setAutoOpenTaskPicker(true);
+        setCurrentPage('gorevler');
+      }}
       userEmail={session.user.email}
       onSignOut={async () => {
         try {

@@ -1,32 +1,35 @@
 import { useState } from 'react';
-import { Home, Building2, Users, CalendarDays, ListTodo, Menu, X, Building, Sparkles, Settings, CircleDollarSign, LogOut } from 'lucide-react';
+import { Home, Building2, Users, CalendarDays, Menu, X, Building, LogOut, Plus } from 'lucide-react';
 
 export type Page = 'dashboard' | 'ilanlar' | 'musteriler' | 'randevular' | 'gorevler' | 'ai-otopilot' | 'entegrasyon' | 'paketler';
 
 type LayoutProps = {
   currentPage: Page;
   onNavigate: (page: Page) => void;
+  onOpenAdd: () => void;
   children: React.ReactNode;
   userEmail?: string;
   onSignOut: () => void;
 };
 
+// Ana menude yalnizca gunluk satis asistani akisina ait dort sayfa gosterilir; digerlerine + Ekle veya ic navigasyon ile erisilir.
 const NAV_ITEMS: { id: Page; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: 'dashboard', label: 'Ana Sayfa', icon: Home },
-  { id: 'ilanlar', label: 'İlanlar', icon: Building2 },
+  { id: 'dashboard', label: 'Bugün', icon: Home },
   { id: 'musteriler', label: 'Müşteriler', icon: Users },
-  { id: 'gorevler', label: 'Görevler', icon: ListTodo },
-  { id: 'ai-otopilot', label: 'Yapay Zeka Otopilot', icon: Sparkles },
-  { id: 'entegrasyon', label: 'Sahibinden Entegrasyonu', icon: Settings },
-  { id: 'paketler', label: 'Paketler', icon: CircleDollarSign },
+  { id: 'ilanlar', label: 'İlanlar', icon: Building2 },
   { id: 'randevular', label: 'Randevular', icon: CalendarDays },
 ];
 
-export default function Layout({ currentPage, onNavigate, children, userEmail, onSignOut }: LayoutProps) {
+export default function Layout({ currentPage, onNavigate, onOpenAdd, children, userEmail, onSignOut }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleNavigate = (page: Page) => {
     onNavigate(page);
+    setMobileOpen(false);
+  };
+
+  const handleOpenAdd = () => {
+    onOpenAdd();
     setMobileOpen(false);
   };
 
@@ -42,6 +45,16 @@ export default function Layout({ currentPage, onNavigate, children, userEmail, o
             <h1 className="text-white font-bold text-lg leading-tight tracking-wide">Trend Emlak Asistanı</h1>
             <p className="text-[#bdaeca] text-xs">Akıllı portföy yönetimi</p>
           </div>
+        </div>
+        <div className="px-3 pt-4">
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#f0a83a] px-4 py-3 text-sm font-bold text-[#211a2d] shadow-sm hover:bg-[#e2992e] transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            + Ekle
+          </button>
         </div>
         <nav className="flex-1 py-4 px-3 space-y-1">
           {NAV_ITEMS.map((item) => {
@@ -95,6 +108,16 @@ export default function Layout({ currentPage, onNavigate, children, userEmail, o
             className="absolute top-14 left-0 right-0 bg-[#211a2d] py-2 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="px-4 pb-2">
+              <button
+                type="button"
+                onClick={handleOpenAdd}
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#f0a83a] px-4 py-3 text-sm font-bold text-[#211a2d] shadow-sm hover:bg-[#e2992e] transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                + Ekle
+              </button>
+            </div>
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const active = currentPage === item.id;

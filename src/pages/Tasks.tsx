@@ -47,9 +47,12 @@ type TaskKind = 'takip' | 'not';
 
 type TasksProps = {
   onNavigate: (page: Page) => void;
+  /** Layout'taki + Ekle düğmesinden tek seferlik picker açma sinyali. */
+  autoOpenPicker?: boolean;
+  onAutoOpenHandled?: () => void;
 };
 
-export default function Tasks({ onNavigate }: TasksProps) {
+export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }: TasksProps) {
   const [gorevler, setGorevler] = useState<GorevWithRelations[]>([]);
   const [musteriler, setMusteriler] = useState<Musteri[]>([]);
   const [ilanlar, setIlanlar] = useState<Ilan[]>([]);
@@ -119,6 +122,13 @@ export default function Tasks({ onNavigate }: TasksProps) {
   const handleOpenAdd = () => {
     setPickerOpen(true);
   };
+
+  useEffect(() => {
+    if (!autoOpenPicker) return;
+    handleOpenAdd();
+    onAutoOpenHandled?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenPicker]);
 
   const handleSelectKind = (kind: TaskKind) => {
     setForm({
