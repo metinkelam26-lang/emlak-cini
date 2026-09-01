@@ -153,11 +153,6 @@ export default function Customers() {
       setFormError('Ad soyad zorunludur.');
       return;
     }
-    const phoneDigits = form.telefon.replace(/\D/g, '');
-    if (form.telefon.trim() && (phoneDigits.length < 10 || phoneDigits.length > 15)) {
-      setFormError('Telefon numarası 10 ile 15 rakam içermelidir.');
-      return;
-    }
     if ([form.butce_min, form.butce_max, form.min_metrekare, form.max_metrekare].some((value) => value < 0)) {
       setFormError('Bütçe ve metrekare değerleri negatif olamaz.');
       return;

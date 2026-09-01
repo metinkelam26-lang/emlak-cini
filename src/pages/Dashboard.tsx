@@ -471,8 +471,17 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     {/* Sağ Butonlar (Büyük, sade, mobil öncelikli) */}
                     <div className="flex flex-wrap items-center gap-2.5 pt-2 md:pt-0 border-t md:border-t-0 border-gray-100 shrink-0">
                       <a
-                        href={`tel:${item.telefon}`}
-                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-teal-700 transition-colors active:scale-95"
+                        href={item.telefon ? `tel:${item.telefon}` : undefined}
+                        aria-disabled={!item.telefon}
+                        title={item.telefon ? undefined : 'Telefon numarası yok'}
+                        onClick={(event) => {
+                          if (!item.telefon) event.preventDefault();
+                        }}
+                        className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold shadow-sm transition-colors active:scale-95 ${
+                          item.telefon
+                            ? 'bg-teal-600 text-white hover:bg-teal-700'
+                            : 'bg-gray-300 text-white cursor-not-allowed'
+                        }`}
                       >
                         <Phone className="w-4 h-4" /> Ara
                       </a>
