@@ -716,8 +716,6 @@ export default function Customers() {
           )}
         </div>
 
-        </div>
-
         <div className="flex flex-col-reverse gap-3 mt-6 pt-4 border-t border-gray-100 sm:flex-row">
           {editId && (
             <button
