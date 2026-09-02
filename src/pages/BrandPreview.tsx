@@ -73,9 +73,9 @@ export default function BrandPreview() {
   const cameraInput = useRef<HTMLInputElement>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [accent, setAccent] = useState(fallbackAccent);
-  const [advisorName, setAdvisorName] = useState('Gülşah Karakoç');
-  const [officeName, setOfficeName] = useState('Trend Gayrimenkul');
-  const [licenseNo, setLicenseNo] = useState('TTYB: 2600739');
+  const [advisorName, setAdvisorName] = useState('');
+  const [officeName, setOfficeName] = useState('');
+  const [licenseNo, setLicenseNo] = useState('');
   const [previewReady, setPreviewReady] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -125,9 +125,9 @@ export default function BrandPreview() {
     return () => window.removeEventListener('paste', handlePaste);
   }, [handleFile]);
 
-  const initials = officeName.trim().slice(0, 2).toLocaleUpperCase('tr-TR') || 'TE';
-  const advisor = advisorName.trim() || 'Danışmanın';
-  const office = officeName.trim() || 'Emlak Ofisin';
+  const initials = officeName.trim().slice(0, 2).toLocaleUpperCase('tr-TR') || 'EA';
+  const advisor = advisorName.trim();
+  const office = officeName.trim() || 'Emlak Asistanın';
 
   return (
     <main className="min-h-screen bg-[#f8f6f0] px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
@@ -154,7 +154,7 @@ export default function BrandPreview() {
               Asistanın ilk bakışta <span style={{ color: accent }}>senin olsun.</span>
             </h1>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-slate-600">
-              Kartvizitini veya logonu yükle. Renklerinle çalışan asistanını ve müşterinin telefonunda göreceği bildirimi anında önizle.
+              Kartvizitini veya logonu yükle; ardından bilgilerini yaz. Renklerinle çalışan asistanını ve müşterinin telefonunda göreceği bildirimi anında önizle.
             </p>
 
             <button
@@ -236,15 +236,15 @@ export default function BrandPreview() {
             <div className="mt-5 grid max-w-xl gap-3 sm:grid-cols-2">
               <label className="sm:col-span-2">
                 <span className="mb-1.5 block text-sm font-semibold text-slate-700">Danışman adı</span>
-                <input value={advisorName} onChange={(event) => setAdvisorName(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none focus:ring-2" style={{ '--tw-ring-color': accent } as React.CSSProperties} />
+                <input value={advisorName} onChange={(event) => setAdvisorName(event.target.value)} placeholder="Örn. Gülşah Karakoç" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none focus:ring-2" style={{ '--tw-ring-color': accent } as React.CSSProperties} />
               </label>
               <label>
                 <span className="mb-1.5 block text-sm font-semibold text-slate-700">Ofis adı</span>
-                <input value={officeName} onChange={(event) => setOfficeName(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none focus:ring-2" style={{ '--tw-ring-color': accent } as React.CSSProperties} />
+                <input value={officeName} onChange={(event) => setOfficeName(event.target.value)} placeholder="Örn. Trend Gayrimenkul" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none focus:ring-2" style={{ '--tw-ring-color': accent } as React.CSSProperties} />
               </label>
               <label>
                 <span className="mb-1.5 block text-sm font-semibold text-slate-700">TTYB numarası</span>
-                <input value={licenseNo} onChange={(event) => setLicenseNo(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none focus:ring-2" style={{ '--tw-ring-color': accent } as React.CSSProperties} />
+                <input value={licenseNo} onChange={(event) => setLicenseNo(event.target.value)} placeholder="Örn. TTYB: 2600739" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none focus:ring-2" style={{ '--tw-ring-color': accent } as React.CSSProperties} />
               </label>
             </div>
 
@@ -284,7 +284,7 @@ export default function BrandPreview() {
                     )}
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold">{office}</p>
-                      <p className="text-xs text-white/80">{licenseNo || 'Yetki belgesi'}</p>
+                      <p className="text-xs text-white/80">{licenseNo || 'TTYB numaran'}</p>
                     </div>
                   </div>
 
@@ -305,7 +305,7 @@ export default function BrandPreview() {
                     </div>
 
                     <div className="ml-auto mt-6 max-w-[88%] rounded-2xl rounded-br-sm bg-[#d9fdd3] px-4 py-3 text-sm text-slate-800 shadow-sm">
-                      Merhaba {advisor}, müşterin için uygun bir ilan bulundu. Asistanın seni aramaya hazır.
+                      {advisor ? `Merhaba ${advisor}, müşterin için uygun bir ilan bulundu. Detayları görüp hemen ara.` : 'Müşterin için uygun bir ilan bulundu. Detayları görüp hemen ara.'}
                       <span className="mt-2 block text-right text-[10px] text-slate-400">09:41 ✓✓</span>
                     </div>
                   </div>
