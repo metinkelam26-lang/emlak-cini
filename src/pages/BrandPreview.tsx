@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import { ArrowRight, Check, ImagePlus, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react';
 
 const fallbackAccent = '#c69214';
