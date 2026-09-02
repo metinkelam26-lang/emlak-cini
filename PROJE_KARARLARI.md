@@ -47,11 +47,19 @@
 4. Mobil kullanım ve hata bildirimlerini iyileştir.
 5. Pilot öncesi e-posta doğrulamasını yeniden açıp güvenlik kontrolü yap.
 
-## Çalışma Kuralları
+## Ölçekleme ve Ağır İş Akışları
+- 100 aktif emlakçı ve yüksek hacimli toplu veri yükleme hedefinde, Excel/CSV işleme tarayıcıdan ayrıştırılacak.
+- React/Vercel yalnız hızlı arayüz ve kullanıcı akışlarını çalıştıracak.
+- Toplu içe aktarma, OCR ve WhatsApp gönderimleri Docker tabanlı Node.js/Python worker üzerinde çalışacak.
+- İşler Redis/BullMQ benzeri kuyrukla sıraya alınacak; uzun süren işlemler arayüzü kilitlemeyecek.
+- Supabase/PostgreSQL ana veri kaynağı olarak kalacak.
+- Bu mimari saha ölçeğine geçiş kararıdır; mevcut prototipin henüz çalışan altyapısı değildir.  
+
+## Çalışma Kuralları 
 - Supabase şema, RLS, Storage ve migration değişiklikleri analiz edilmeden yapılmaz.
 - Eski migration değiştirilmez.
 - Büyük refactor yalnızca ölçülebilir faydayla yapılır.
 - Her kod değişikliğinden sonra build çalıştırılır.
-- Aider kullanılmayacak; Windows Uygulama Denetimi `_ctypes` DLL yüklemesini engelliyor.
+
 
 
