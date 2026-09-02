@@ -9,6 +9,7 @@ import Tasks from '@/pages/Tasks';
 import SahibindenIntegration from '@/pages/SahibindenIntegration';
 import Pricing from '@/pages/Pricing';
 import Auth from '@/pages/Auth';
+import BrandPreview from '@/pages/BrandPreview';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
@@ -59,6 +60,7 @@ export default function App() {
     };
   }, [session]);
 
+  if (window.location.pathname === '/kendi-markani-gor') return <BrandPreview />;
   if (authLoading) return <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">Trend Emlak Asistanı yükleniyor...</div>;
   if (!session) return <Auth />;
   if (!workspaceReady) return <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">Ofis alanınız hazırlanıyor...</div>;
