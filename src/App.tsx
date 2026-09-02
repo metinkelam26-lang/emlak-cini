@@ -27,6 +27,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const preventBrowserBackspace = (event: KeyboardEvent) => {
+      if (event.key !== 'Backspace' || event.defaultPrevented) return;
+
+      const target = event.target;
+      const isEditable =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable);
+
+      if (!isEditable) event.preventDefault();
+    };
+
+    window.addEventListener('keydown', preventBrowserBackspace);
+    return () => window.removeEventListener('keydown', preventBrowserBackspace);
+  }, []);
+
+  useEffect(() => {
     if (!session) {
       setWorkspaceReady(false);
       return;
