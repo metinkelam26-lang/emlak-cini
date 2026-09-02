@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowRight, Check, ImagePlus, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react';
 
 const fallbackAccent = '#c69214';
@@ -77,7 +77,7 @@ export default function BrandPreview() {
   const [previewReady, setPreviewReady] = useState(false);
   const [dragging, setDragging] = useState(false);
 
-  const handleFile = async (file?: File) => {
+  const handleFile = useCallback(async (file?: File) => {
     if (!file || !file.type.startsWith('image/')) return;
 
     if (logoUrl) URL.revokeObjectURL(logoUrl);
@@ -85,7 +85,31 @@ export default function BrandPreview() {
     setLogoUrl(nextUrl);
     setAccent(await extractAccent(file));
     setPreviewReady(false);
-  };
+  }, [logoUrl]);
+
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+
+      const image = Array.from(event.clipboardData?.items || [])
+        .find((item) => item.type.startsWith('image/'))
+        ?.getAsFile();
+
+      if (!image) return;
+      event.preventDefault();
+      void handleFile(image);
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [handleFile]);
 
   const initials = officeName.trim().slice(0, 2).toLocaleUpperCase('tr-TR') || 'TE';
   const advisor = advisorName.trim() || 'Danışmanın';
@@ -155,6 +179,19 @@ export default function BrandPreview() {
                 </span>
               </span>
             </button>
+
+            <div className="mt-3 flex max-w-xl flex-col gap-2 text-sm sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                className="inline-flex w-fit items-center gap-2 rounded-lg px-3 py-2 font-semibold text-white transition hover:brightness-95"
+                style={{ backgroundColor: accent }}
+              >
+                <ImagePlus className="h-4 w-4" />
+                Bilgisayardan görsel seç
+              </button>
+              <span className="text-slate-500">veya görseli kopyalayıp bu sayfada <strong className="text-slate-700">Ctrl+V</strong> ile yapıştır.</span>
+            </div>
 
             <div className="mt-5 grid max-w-xl gap-3 sm:grid-cols-2">
               <label className="sm:col-span-2">
