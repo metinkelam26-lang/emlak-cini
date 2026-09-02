@@ -1,0 +1,83 @@
+<div id="wa-senaryo-root">
+  <style>
+    #wa-senaryo-root { --wa-paper: light-dark(#f7f4ee,#14171c); --wa-ink: light-dark(#17202a,#f4f7fb); --wa-muted: light-dark(#64748b,#a9b5c6); --wa-line: light-dark(#dbe3e9,#303945); --wa-phone: light-dark(#101820,#0a0c10); --wa-chat: light-dark(#efeae2,#1e252c); --wa-assistant: light-dark(#ffffff,#2a333d); --wa-user: light-dark(#d9fdd3,#184a3a); --wa-green: light-dark(#007e6a,#37d6a3); color:var(--wa-ink); font-family:Arial,sans-serif; }
+    #wa-senaryo-root * { box-sizing:border-box; }
+    #wa-senaryo-root .wa-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(290px,360px); gap:28px; align-items:center; }
+    #wa-senaryo-root h2 { margin:0 0 8px; font-size:24px; }
+    #wa-senaryo-root .wa-intro { color:var(--wa-muted); margin:0 0 18px; line-height:1.5; }
+    #wa-senaryo-root .wa-choices { display:grid; gap:9px; }
+    #wa-senaryo-root .wa-choice { width:100%; min-height:62px; padding:12px 14px; display:flex; gap:12px; text-align:left; align-items:center; background:transparent; color:var(--wa-ink); border:1px solid var(--wa-line); border-radius:12px; cursor:pointer; }
+    #wa-senaryo-root .wa-choice[aria-pressed="true"] { background:color-mix(in srgb,var(--wa-green) 12%,transparent); border-color:var(--wa-green); }
+    #wa-senaryo-root .wa-choice strong { display:block; font-size:15px; }
+    #wa-senaryo-root .wa-choice span { display:block; margin-top:3px; color:var(--wa-muted); font-size:13px; }
+    #wa-senaryo-root .wa-number { display:grid; place-items:center; width:31px; height:31px; flex:none; border-radius:50%; color:var(--wa-green); background:color-mix(in srgb,var(--wa-green) 12%,transparent); font-weight:700; }
+    #wa-senaryo-root .wa-note { margin:16px 0 0; color:var(--wa-muted); font-size:13px; line-height:1.45; }
+    #wa-senaryo-root .wa-phone { background:var(--wa-phone); border-radius:38px; padding:10px; box-shadow:0 16px 38px color-mix(in srgb,var(--wa-ink) 22%,transparent); }
+    #wa-senaryo-root .wa-screen { min-height:600px; overflow:hidden; border-radius:29px; background:var(--wa-chat); }
+    #wa-senaryo-root .wa-top { display:flex; align-items:center; gap:10px; padding:15px 14px; color:white; background:var(--wa-green); }
+    #wa-senaryo-root .wa-avatar { display:grid; place-items:center; width:34px; height:34px; border-radius:50%; color:var(--wa-green); background:white; font-weight:700; }
+    #wa-senaryo-root .wa-top strong { display:block; font-size:14px; }
+    #wa-senaryo-root .wa-top span { display:block; margin-top:2px; font-size:11px; opacity:.85; }
+    #wa-senaryo-root .wa-messages { padding:16px 12px 8px; display:grid; gap:9px; }
+    #wa-senaryo-root .wa-day { text-align:center; color:var(--wa-muted); font-size:11px; }
+    #wa-senaryo-root .wa-bubble { max-width:88%; padding:9px 10px 7px; border-radius:10px; line-height:1.4; font-size:14px; box-shadow:0 1px 1px color-mix(in srgb,var(--wa-ink) 9%,transparent); }
+    #wa-senaryo-root .wa-in { justify-self:start; background:var(--wa-assistant); border-top-left-radius:3px; }
+    #wa-senaryo-root .wa-out { justify-self:end; background:var(--wa-user); border-top-right-radius:3px; }
+    #wa-senaryo-root .wa-time { display:block; margin-top:4px; color:var(--wa-muted); text-align:right; font-size:10px; }
+    #wa-senaryo-root .wa-card { margin-top:3px; padding-top:7px; border-top:1px solid color-mix(in srgb,var(--wa-ink) 10%,transparent); font-size:12px; }
+    #wa-senaryo-root .wa-card b { display:block; margin-bottom:2px; }
+    #wa-senaryo-root .wa-actions { display:flex; gap:7px; margin-top:8px; flex-wrap:wrap; }
+    #wa-senaryo-root .wa-action { border:0; background:transparent; color:var(--wa-green); padding:3px 0; font-weight:700; font-size:12px; cursor:pointer; }
+    #wa-senaryo-root .wa-input { margin:9px; padding:9px 12px; border-radius:20px; color:var(--wa-muted); background:var(--wa-assistant); font-size:13px; }
+    #wa-senaryo-root .wa-engine { margin-top:12px; padding:10px 12px; border-radius:10px; background:color-mix(in srgb,var(--wa-green) 10%,transparent); color:var(--wa-ink); font-size:12px; line-height:1.4; }
+    #wa-senaryo-root .wa-engine b { color:var(--wa-green); }
+    @media (max-width:650px) { #wa-senaryo-root .wa-layout { grid-template-columns:1fr; } #wa-senaryo-root .wa-phone { max-width:360px; width:100%; margin:auto; } }
+  </style>
+  <div class="wa-layout">
+    <section aria-label="Asistan senaryoları">
+      <h2>WhatsApp’taki satış asistanı</h2>
+      <p class="wa-intro">Emlakçı kendi WhatsApp’ından yazıyor. Asistan mevcut aksiyon, eşleşme ve randevu motorundan cevap veriyor.</p>
+      <div class="wa-choices" role="group" aria-label="Senaryo seç">
+        <button class="wa-choice" type="button" data-scene="today" aria-pressed="true"><i class="wa-number">1</i><span><strong>Bugün ne yapmalıyım?</strong><span>Aksiyon kuyruğundan öncelik sırası</span></span></button>
+        <button class="wa-choice" type="button" data-scene="match" aria-pressed="false"><i class="wa-number">2</i><span><strong>Müşteriye uygun ilan</strong><span>Server-side güçlü eşleşme sonucu</span></span></button>
+        <button class="wa-choice" type="button" data-scene="appointment" aria-pressed="false"><i class="wa-number">3</i><span><strong>Randevu özeti</strong><span>Bugünkü planlı görüşmeler</span></span></button>
+        <button class="wa-choice" type="button" data-scene="followup" aria-pressed="false"><i class="wa-number">4</i><span><strong>Takip oluşturma</strong><span>Asistan önce teyit ister</span></span></button>
+        <button class="wa-choice" type="button" data-scene="help" aria-pressed="false"><i class="wa-number">5</i><span><strong>YARDIM</strong><span>Kısa komutlarla yönlendirme</span></span></button>
+      </div>
+      <p class="wa-note">İlk sürümde yalnız kayıtlı telefon numarası kendi ofisinin verisini görür. Müşteriye otomatik mesaj yoktur.</p>
+    </section>
+    <section class="wa-phone" aria-label="WhatsApp konuşması önizlemesi">
+      <div class="wa-screen">
+        <div class="wa-top"><span class="wa-avatar">TE</span><div><strong>Trend Emlak Asistanı</strong><span>çevrimiçi</span></div></div>
+        <div id="wa-messages" class="wa-messages" aria-live="polite"></div>
+        <div class="wa-input">Mesaj yaz</div>
+      </div>
+      <div id="wa-engine" class="wa-engine"></div>
+    </section>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById('wa-senaryo-root');
+      const messages = root.querySelector('#wa-messages');
+      const engine = root.querySelector('#wa-engine');
+      const scenes = {
+        today: { engine:'<b>Motor:</b> aksiyon_bekleyenler() → gecikmiş takip, bugün randevu, güçlü eşleşme sırası.', rows:[['out','Bugün ne yapmalıyım?'],['in','Bugün 3 öncelikli işin var.<div class="wa-card"><b>1. Hatun’u ara · Gecikti</b>Takip: Yeni müşteri — 1 gün gecikmiş</div><div class="wa-card"><b>2. Metin ile randevu · 14:30</b>Çamlıca 3+1 aile dairesi</div><div class="wa-card"><b>3. Test Müşteri için eşleşme</b>Çamlıca Parka Yakın 3+1 · %100</div><div class="wa-actions"><button class="wa-action" type="button">Hatun’u ara</button><button class="wa-action" type="button">Randevuyu aç</button></div>']]},
+        match: { engine:'<b>Motor:</b> musteriye_uygun_ilanlar() → bütçe, ilçe, oda ve metrekare hard filter; puanlama server-side.', rows:[['out','Hatun için uygun ilan var mı?'],['in','Evet, 2 güçlü eşleşme buldum.<div class="wa-card"><b>Çamlıca Parka Yakın 3+1</b>₺3.500.000 · Tepebaşı / Çamlıca · %100</div><div class="wa-card"><b>Tepebaşı’nda 3+1 daire</b>₺3.750.000 · Tepebaşı / Batıkent · %90</div><div class="wa-actions"><button class="wa-action" type="button">İlanı aç</button><button class="wa-action" type="button">Gösterildi kaydet</button></div>']]},
+        appointment: { engine:'<b>Motor:</b> randevular tablosu → yalnız kendi ofisinin bugünkü planlı randevuları.', rows:[['out','Bugünkü randevularım'],['in','Bugün 1 randevun var.<div class="wa-card"><b>14:30 · Metin</b>Çamlıca 3+1 aile dairesi<br>Durum: Planlandı</div><div class="wa-actions"><button class="wa-action" type="button">Görüşüldü</button><button class="wa-action" type="button">Ertele</button></div>']]},
+        followup: { engine:'<b>Motor:</b> takip_olustur() → tek açık takip kuralı; yazmadan önce kullanıcı teyidi.', rows:[['out','Hatun’u yarın ara'],['in','Hatun için yarın, 10:00 takip oluşturayım mı?'],['out','EVET'],['in','Tamam. Hatun için yarın 10:00 takip oluşturuldu.<div class="wa-card"><b>Takip nedeni</b>Geri arama</div>']]},
+        help: { engine:'<b>Motor:</b> Komut yönlendiricisi. Anlaşılmayan mesajda veri uydurmaz; net seçenek sunar.', rows:[['out','YARDIM'],['in','Bana şunları yazabilirsin:<div class="wa-card"><b>BUGÜN</b>Öncelikli aksiyonların</div><div class="wa-card"><b>Hatun için ilan</b>Uygun eşleşmeler</div><div class="wa-card"><b>RANDEVULAR</b>Bugünkü planın</div><div class="wa-card"><b>Hatun’u yarın ara</b>Teyitli takip oluşturma</div>']]}
+      };
+      function render(scene) {
+        const current = scenes[scene];
+        messages.innerHTML = '<div class="wa-day">BUGÜN</div>' + current.rows.map(([kind, html]) => `<div class="wa-bubble wa-${kind}">${html}<span class="wa-time">09:41 ${kind === 'out' ? '✓✓' : ''}</span></div>`).join('');
+        engine.innerHTML = current.engine;
+      }
+      root.querySelectorAll('[data-scene]').forEach(button => button.addEventListener('click', () => {
+        root.querySelectorAll('[data-scene]').forEach(item => item.setAttribute('aria-pressed','false'));
+        button.setAttribute('aria-pressed','true');
+        render(button.dataset.scene);
+      }));
+      render('today');
+    })();
+  </script>
+</div>
