@@ -181,6 +181,10 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
       setFormError('Son tarih zorunludur.');
       return;
     }
+    if (taskKind === 'takip' && !form.musteri_id) {
+      setFormError('Müşteri zorunludur.');
+      return;
+    }
 
     setSaving(true);
     setFormError(null);
@@ -200,7 +204,7 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
         task.ilan_id === payload.ilan_id,
     );
 
-    if (duplicate) {
+    if (duplicate && (editId || taskKind !== 'takip')) {
       setSaving(false);
       setFormError('Aynı görev daha önce kaydedilmiş. Lütfen farklı bir başlık veya tarih seçin.');
       return;
@@ -210,11 +214,20 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
       if (editId) {
         const { error } = await supabase.from('gorevler').update(payload).eq('id', editId);
         if (error) throw error;
+      } else if (taskKind === 'takip') {
+        const { error } = await supabase.rpc('takip_olustur', {
+          p_musteri_id: form.musteri_id,
+          p_sonraki_aksiyon: form.baslik.trim(),
+          p_son_tarih: form.son_tarih,
+          p_aciklama: form.aciklama.trim(),
+        });
+        if (error) throw error;
       } else {
         const { error } = await supabase.from('gorevler').insert(payload);
         if (error) throw error;
       }
       setModalOpen(false);
+      if (taskKind === 'takip') setForm({ ...emptyForm, son_tarih: getLocalTodayISO() });
       await loadGorevler();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Kaydetme başarısız');
