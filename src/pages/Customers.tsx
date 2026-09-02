@@ -37,6 +37,7 @@ import { getMatchLabel, getMatchBadgeClass } from '@/lib/matching';
 import Modal from '@/components/Modal';
 import Badge from '@/components/Badge';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import MoneyInput from '@/components/MoneyInput';
 
 const emptyForm: MusteriInput = {
   ad_soyad: '',
@@ -577,24 +578,24 @@ export default function Customers() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Bütçe Minimum (TL)
               </label>
-              <input
-                type="number"
-                value={form.butce_min || ''}
-                onChange={(e) => setForm({ ...form, butce_min: Number(e.target.value) })}
+              <MoneyInput
+                value={form.butce_min}
+                onValueChange={(butce_min) => setForm({ ...form, butce_min })}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                placeholder="Örn: 2000000"
+                placeholder="Örn: 1,5 milyon"
+                ariaLabel="Bütçe minimum"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Bütçe Maksimum (TL)
               </label>
-              <input
-                type="number"
-                value={form.butce_max || ''}
-                onChange={(e) => setForm({ ...form, butce_max: Number(e.target.value) })}
+              <MoneyInput
+                value={form.butce_max}
+                onValueChange={(butce_max) => setForm({ ...form, butce_max })}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                placeholder="Örn: 5000000"
+                placeholder="Örn: 3 milyon"
+                ariaLabel="Bütçe maksimum"
               />
             </div>
           </div>
