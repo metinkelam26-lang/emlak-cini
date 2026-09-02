@@ -70,6 +70,7 @@ function extractAccent(file: File) {
 
 export default function BrandPreview() {
   const fileInput = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [accent, setAccent] = useState(fallbackAccent);
   const [advisorName, setAdvisorName] = useState('Gülşah Karakoç');
@@ -180,6 +181,14 @@ export default function BrandPreview() {
                 className="hidden"
                 onChange={(event) => void handleFile(event.target.files?.[0])}
               />
+              <input
+                ref={cameraInput}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(event) => void handleFile(event.target.files?.[0])}
+              />
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${accent}1f`, color: accent }}>
                 {logoUrl ? <Check className="h-6 w-6" /> : <ImagePlus className="h-6 w-6" />}
               </span>
@@ -209,9 +218,19 @@ export default function BrandPreview() {
                 style={{ backgroundColor: accent }}
               >
                 <ImagePlus className="h-4 w-4" />
-                Bilgisayardan görsel seç
+                <span className="sm:hidden">Galeriden görsel seç</span>
+                <span className="hidden sm:inline">Bilgisayardan görsel seç</span>
               </button>
-              <span className="text-slate-500">veya görseli kopyalayıp bu sayfada <strong className="text-slate-700">Ctrl+V</strong> ile yapıştır.</span>
+              <button
+                type="button"
+                onClick={() => cameraInput.current?.click()}
+                className="inline-flex w-fit items-center gap-2 rounded-lg border px-3 py-2 font-semibold transition sm:hidden"
+                style={{ borderColor: accent, color: accent }}
+              >
+                <span aria-hidden="true">◉</span>
+                Fotoğraf çek
+              </button>
+              <span className="hidden text-slate-500 sm:inline">veya görseli kopyalayıp bu sayfada <strong className="text-slate-700">Ctrl+V</strong> ile yapıştır.</span>
             </div>
 
             <div className="mt-5 grid max-w-xl gap-3 sm:grid-cols-2">
