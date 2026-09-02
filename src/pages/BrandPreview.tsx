@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { ArrowRight, Check, ImagePlus, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react';
 
 const fallbackAccent = '#c69214';
+const maxImageSizeBytes = 10 * 1024 * 1024;
 
 function rgbToHex(red: number, green: number, blue: number) {
   return `#${[red, green, blue].map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`;
@@ -76,13 +77,25 @@ export default function BrandPreview() {
   const [licenseNo, setLicenseNo] = useState('TTYB: 2600739');
   const [previewReady, setPreviewReady] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [imageSize, setImageSize] = useState<number | null>(null);
 
   const handleFile = useCallback(async (file?: File) => {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file || !file.type.startsWith('image/')) {
+      setUploadError('Lütfen JPG, PNG veya WEBP biçiminde bir görsel seç.');
+      return;
+    }
 
+    if (file.size > maxImageSizeBytes) {
+      setUploadError('Görsel en fazla 10 MB olabilir. Daha küçük bir kartvizit veya logo seç.');
+      return;
+    }
+
+    setUploadError(null);
     if (logoUrl) URL.revokeObjectURL(logoUrl);
     const nextUrl = URL.createObjectURL(file);
     setLogoUrl(nextUrl);
+    setImageSize(file.size);
     setAccent(await extractAccent(file));
     setPreviewReady(false);
   }, [logoUrl]);
@@ -175,10 +188,18 @@ export default function BrandPreview() {
                   {logoUrl ? 'Kartvizitin eklendi' : 'Kurumsal kartvizitini veya logonu buraya sürükle'}
                 </span>
                 <span className="mt-1 block text-sm text-slate-500">
-                  {logoUrl ? 'Renklerin telefon önizlemesine uygulandı.' : 'PNG, JPG veya WEBP · Bu önizlemede görselin tarayıcından ayrılmaz.'}
+                  {logoUrl
+                    ? `Renklerin telefon önizlemesine uygulandı${imageSize ? ` · ${(imageSize / 1024 / 1024).toFixed(1)} MB` : ''}.`
+                    : 'PNG, JPG veya WEBP · En fazla 10 MB · Görselin tarayıcından ayrılmaz.'}
                 </span>
               </span>
             </button>
+
+            {uploadError && (
+              <p className="mt-3 max-w-xl rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                {uploadError}
+              </p>
+            )}
 
             <div className="mt-3 flex max-w-xl flex-col gap-2 text-sm sm:flex-row sm:items-center">
               <button
