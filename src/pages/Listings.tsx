@@ -40,6 +40,7 @@ import Badge from '@/components/Badge';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import PhotoUpload from '@/components/PhotoUpload';
 import BulkListingImport from '@/components/BulkListingImport';
+import MoneyInput from '@/components/MoneyInput';
 
 const emptyForm: IlanInput = {
   baslik: '',
@@ -311,19 +312,19 @@ export default function Listings() {
                 </option>
               ))}
             </select>
-            <input
-              type="number"
+            <MoneyInput
+              value={Number(filterFiyatMin) || 0}
+              onValueChange={(value) => setFilterFiyatMin(value ? String(value) : '')}
               placeholder="Min Fiyat (TL)"
-              value={filterFiyatMin}
-              onChange={(e) => setFilterFiyatMin(e.target.value)}
               className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              ariaLabel="Minimum fiyat filtresi"
             />
-            <input
-              type="number"
+            <MoneyInput
+              value={Number(filterFiyatMax) || 0}
+              onValueChange={(value) => setFilterFiyatMax(value ? String(value) : '')}
               placeholder="Maks Fiyat (TL)"
-              value={filterFiyatMax}
-              onChange={(e) => setFilterFiyatMax(e.target.value)}
               className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              ariaLabel="Maksimum fiyat filtresi"
             />
             {hasActiveFilters ? (
               <button
@@ -522,12 +523,12 @@ export default function Listings() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Fiyat (TL)</label>
-            <input
-              type="number"
-              value={form.fiyat || ''}
-              onChange={(e) => setForm({ ...form, fiyat: Number(e.target.value) })}
+            <MoneyInput
+              value={form.fiyat}
+              onValueChange={(fiyat) => setForm({ ...form, fiyat })}
               className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              placeholder="Örn: 5000000"
+              placeholder="Örn: 3,5 milyon"
+              ariaLabel="İlan fiyatı"
             />
           </div>
 
