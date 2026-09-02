@@ -71,6 +71,7 @@ export default function Customers() {
   const [form, setForm] = useState<MusteriInput>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Matching state
@@ -123,6 +124,7 @@ export default function Customers() {
     setForm({ ...emptyForm });
     setEditId(null);
     setFormError(null);
+    setShowAdvanced(false);
     setModalOpen(true);
   };
 
@@ -134,6 +136,7 @@ export default function Customers() {
     setForm(rest);
     setEditId(m.id);
     setFormError(null);
+    setShowAdvanced(true);
     setModalOpen(true);
   };
 
@@ -529,30 +532,18 @@ export default function Customers() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
-              <input
-                type="text"
-                value={form.telefon}
-                onChange={(e) => setForm({ ...form, telefon: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                placeholder="Örn: 0555 123 45 67"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
-              <input
-                type="email"
-                value={form.eposta}
-                onChange={(e) => setForm({ ...form, eposta: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                placeholder="Örn: ahmet@email.com"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+            <input
+              type="text"
+              value={form.telefon}
+              onChange={(e) => setForm({ ...form, telefon: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              placeholder="Örn: 0555 123 45 67"
+            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Müşteri Tipi</label>
               <select
@@ -577,21 +568,6 @@ export default function Customers() {
               >
                 <option value="satilik">Satılık</option>
                 <option value="kiralik">Kiralık</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Durum</label>
-              <select
-                value={form.durum}
-                onChange={(e) =>
-                  setForm({ ...form, durum: e.target.value as MusteriInput['durum'] })
-                }
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              >
-                <option value="yeni">Yeni</option>
-                <option value="aktif">Aktif</option>
-                <option value="beklemede">Beklemede</option>
-                <option value="tamamlandi">Tamamlandı</option>
               </select>
             </div>
           </div>
@@ -623,83 +599,123 @@ export default function Customers() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">İstediği İlçe</label>
-              <input
-                type="text"
-                value={form.istenen_ilce}
-                onChange={(e) => setForm({ ...form, istenen_ilce: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                placeholder="Örn: Tepebaşı"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">İstediği Mahalle</label>
-              <input
-                type="text"
-                value={form.istenen_mahalle}
-                onChange={(e) => setForm({ ...form, istenen_mahalle: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                placeholder="Örn: Esatpaşa"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                İstediği Oda Sayısı
-              </label>
-              <select
-                value={form.istenen_oda_sayisi}
-                onChange={(e) => setForm({ ...form, istenen_oda_sayisi: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              >
-                <option value="">Seçiniz</option>
-                {ODA_SECENEKLERI.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Minimum Metrekare (m²)
-              </label>
-              <input
-                type="number"
-                value={form.min_metrekare || ''}
-                onChange={(e) => setForm({ ...form, min_metrekare: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                placeholder="Örn: 100"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Maksimum Metrekare (m²)
-              </label>
-              <input
-                type="number"
-                value={form.max_metrekare || ''}
-                onChange={(e) => setForm({ ...form, max_metrekare: Number(e.target.value) })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-                placeholder="Örn: 200"
-              />
-            </div>
-          </div>
-
           <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notlar/Talep</label>
-            <textarea
-              value={form.notlar}
-              onChange={(e) => setForm({ ...form, notlar: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none"
-              placeholder="Müşteri hakkında ek bilgiler..."
+            <label className="block text-sm font-medium text-gray-700 mb-1">İstediği İlçe</label>
+            <input
+              type="text"
+              value={form.istenen_ilce}
+              onChange={(e) => setForm({ ...form, istenen_ilce: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              placeholder="Örn: Tepebaşı"
             />
           </div>
+
+          {!editId && (
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((current) => !current)}
+              className="text-sm font-medium text-teal-700 hover:text-teal-800"
+            >
+              {showAdvanced ? 'Diğer tercihleri gizle' : 'Diğer tercihleri ekle'}
+            </button>
+          )}
+
+          {(editId || showAdvanced) && (
+            <div className="space-y-4 border-t border-gray-100 pt-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+                <input
+                  type="email"
+                  value={form.eposta}
+                  onChange={(e) => setForm({ ...form, eposta: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  placeholder="Örn: ahmet@email.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Durum</label>
+                <select
+                  value={form.durum}
+                  onChange={(e) => setForm({ ...form, durum: e.target.value as MusteriInput['durum'] })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                >
+                  <option value="yeni">Yeni</option>
+                  <option value="aktif">Aktif</option>
+                  <option value="beklemede">Beklemede</option>
+                  <option value="tamamlandi">Tamamlandı</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">İstediği Mahalle</label>
+                <input
+                  type="text"
+                  value={form.istenen_mahalle}
+                  onChange={(e) => setForm({ ...form, istenen_mahalle: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  placeholder="Örn: Esatpaşa"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    İstediği Oda Sayısı
+                  </label>
+                  <select
+                    value={form.istenen_oda_sayisi}
+                    onChange={(e) => setForm({ ...form, istenen_oda_sayisi: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  >
+                    <option value="">Seçiniz</option>
+                    {ODA_SECENEKLERI.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Minimum Metrekare (m²)
+                  </label>
+                  <input
+                    type="number"
+                    value={form.min_metrekare || ''}
+                    onChange={(e) => setForm({ ...form, min_metrekare: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                    placeholder="Örn: 100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Maksimum Metrekare (m²)
+                  </label>
+                  <input
+                    type="number"
+                    value={form.max_metrekare || ''}
+                    onChange={(e) => setForm({ ...form, max_metrekare: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                    placeholder="Örn: 200"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notlar/Talep</label>
+                <textarea
+                  value={form.notlar}
+                  onChange={(e) => setForm({ ...form, notlar: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none"
+                  placeholder="Müşteri hakkında ek bilgiler..."
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         </div>
 
         <div className="flex flex-col-reverse gap-3 mt-6 pt-4 border-t border-gray-100 sm:flex-row">
