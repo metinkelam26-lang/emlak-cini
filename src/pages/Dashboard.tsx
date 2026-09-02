@@ -47,6 +47,31 @@ type ActionItem = {
   ilan_id: string | null;
 };
 
+function getActionScheduleLabel(date: string | null, time: string | null) {
+  if (!date) {
+    return time ? { label: time, isOverdue: false } : null;
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  const todayMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(getLocalTodayISO());
+  if (!match || !todayMatch) {
+    return { label: `${formatDateShort(date)}${time ? ` · ${time}` : ''}`, isOverdue: false };
+  }
+
+  const actionDay = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const todayDay = Date.UTC(Number(todayMatch[1]), Number(todayMatch[2]) - 1, Number(todayMatch[3]));
+  const dayDifference = Math.round((actionDay - todayDay) / 86_400_000);
+  const timeLabel = time ? ` · ${time}` : '';
+
+  if (dayDifference < 0) {
+    return { label: `Gecikti · ${Math.abs(dayDifference)} gün${timeLabel}`, isOverdue: true };
+  }
+  if (dayDifference === 0) return { label: `Bugün${timeLabel}`, isOverdue: false };
+  if (dayDifference === 1) return { label: `Yarın${timeLabel}`, isOverdue: false };
+
+  return { label: `${formatDateShort(date)}${timeLabel}`, isOverdue: false };
+}
+
 export default function Dashboard({ onNavigate }: DashboardProps) {
   const [stats, setStats] = useState({
     totalIlan: 0,
@@ -411,6 +436,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               const isRandevu = item.aksiyon_tipi === 'randevu';
               const isRandevuSonucu = item.aksiyon_tipi === 'randevu_sonucu';
               const isEslesme = item.aksiyon_tipi === 'eslesme';
+              const scheduleLabel = getActionScheduleLabel(item.aksiyon_tarihi, item.aksiyon_saati);
               const call = {
                 id: item.aksiyon_id,
                 ad: item.ad_soyad,
@@ -459,10 +485,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Aksiyon Nedeni / Detay</p>
                         <p className="text-sm font-medium text-slate-700 leading-snug">{item.neden}</p>
                         {item.baslik && <p className="text-xs text-slate-500 mt-1">İlişkili: {item.baslik}</p>}
-                        {(item.aksiyon_tarihi || item.aksiyon_saati) && (
-                          <p className="text-xs font-semibold text-teal-700 mt-1">
-                            ⏰ {item.aksiyon_tarihi ? formatDateShort(item.aksiyon_tarihi) : ''}
-                            {item.aksiyon_saati ? ` · ${item.aksiyon_saati}` : ''}
+                        {scheduleLabel && (
+                          <p className={`text-xs font-semibold mt-1 ${scheduleLabel.isOverdue ? 'text-red-700' : 'text-teal-700'}`}>
+                            ⏰ {scheduleLabel.label}
                           </p>
                         )}
                       </div>
