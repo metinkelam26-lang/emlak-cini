@@ -256,6 +256,7 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
   };
 
   const hasActiveFilters = filterDurum || filterOncelik;
+  const isNewFollowUp = !editId && taskKind === 'takip';
 
   return (
     <div className="space-y-6">
@@ -460,16 +461,35 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
           </div>
         )}
         <div className="space-y-4">
+          {isNewFollowUp && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Müşteri <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={form.musteri_id || ''}
+                onChange={(e) => setForm({ ...form, musteri_id: e.target.value || null })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              >
+                <option value="">Müşteri seçiniz</option>
+                {musteriler.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.ad_soyad}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Başlık <span className="text-red-500">*</span>
+              {isNewFollowUp ? 'Ne yapacaksın?' : 'Başlık'} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={form.baslik}
               onChange={(e) => setForm({ ...form, baslik: e.target.value })}
               className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              placeholder="Örn. Ahmet Bey'i ara"
+              placeholder={isNewFollowUp ? 'Örn. Fiyat bilgisini teyit et' : "Örn. Ahmet Bey'i ara"}
             />
             <div className="mt-2 flex flex-wrap gap-2">
               {['Geri arama', 'Teklif hazırlama', 'Randevu planlama', 'İlan görüntüleme'].map((template) => (
@@ -485,7 +505,7 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${isNewFollowUp ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Son tarih <span className="text-red-500">*</span>
@@ -497,7 +517,8 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
               />
             </div>
-            <div>
+            {!isNewFollowUp && (
+              <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Saat</label>
               <input
                 type="time"
@@ -505,10 +526,12 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
                 onChange={(e) => setForm({ ...form, saat: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
               />
-            </div>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {!isNewFollowUp && (
+            <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Öncelik</label>
               <select
@@ -535,9 +558,11 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
                 <option value="iptal">İptal</option>
               </select>
             </div>
-          </div>
+            </div>
+          )}
 
-          <div>
+          {!isNewFollowUp && (
+            <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Müşteri</label>
             <select
               value={form.musteri_id || ''}
@@ -559,9 +584,11 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
                 </option>
               ))}
             </select>
-          </div>
+            </div>
+          )}
 
-          <div>
+          {!isNewFollowUp && (
+            <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">İlan</label>
             <select
               value={form.ilan_id || ''}
@@ -583,10 +610,11 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
                 </option>
               ))}
             </select>
-          </div>
+            </div>
+          )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{isNewFollowUp ? 'Not (isteğe bağlı)' : 'Açıklama'}</label>
             <textarea
               value={form.aciklama}
               onChange={(e) => setForm({ ...form, aciklama: e.target.value })}
@@ -623,7 +651,7 @@ export default function Tasks({ onNavigate, autoOpenPicker, onAutoOpenHandled }:
             disabled={saving}
             className="w-full px-4 py-2.5 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition-colors disabled:opacity-50 sm:flex-1"
           >
-            {saving ? 'Kaydediliyor...' : editId ? 'Güncelle' : 'Kaydet'}
+            {saving ? 'Kaydediliyor...' : editId ? 'Güncelle' : isNewFollowUp ? 'Takip oluştur' : 'Kaydet'}
           </button>
         </div>
       </Modal>
