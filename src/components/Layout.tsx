@@ -124,10 +124,23 @@ export default function Layout({ currentPage, onNavigate, onOpenAdd, children, u
             Markam
           </a>
         </nav>
-        <div className="px-6 py-4 border-t border-slate-700">
-          {userEmail && <p className="mb-3 truncate text-xs text-slate-400" title={userEmail}>{userEmail}</p>}
-          <button type="button" onClick={onSignOut} className="mb-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white"><LogOut className="h-4 w-4" /> Çıkış yap</button>
-          <p className="text-[#8f7ca0] text-xs">? 2026 {brandName}</p>
+        <div className="mt-auto shrink-0 border-t border-slate-700 bg-[#211a2d] px-4 py-4">
+          {userEmail && (
+            <p className="mb-3 truncate px-2 text-xs text-slate-400" title={userEmail}>
+              {userEmail}
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="flex w-full items-center gap-2 rounded-lg border border-slate-600 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 hover:text-white"
+          >
+            <LogOut className="h-4 w-4" />
+            Çıkış yap
+          </button>
+
+          <p className="mt-3 px-2 text-xs text-[#8f7ca0]">© 2026 {brandName}</p>
         </div>
       </aside>
 
