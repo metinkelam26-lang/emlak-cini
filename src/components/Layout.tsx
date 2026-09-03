@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Home, Building2, Users, CalendarDays, Menu, X, Building, LogOut, Plus, Palette } from 'lucide-react';
+import { Home, Building2, Users, CalendarDays, Menu, X, Building, LogOut, Plus, Palette, Download } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export type Page = 'dashboard' | 'ilanlar' | 'musteriler' | 'randevular' | 'gorevler' | 'ai-otopilot' | 'entegrasyon' | 'paketler';
@@ -10,6 +10,8 @@ type LayoutProps = {
   onOpenAdd: () => void;
   children: React.ReactNode;
   userEmail?: string;
+  canInstallApp?: boolean;
+  onInstallApp?: () => void;
   onSignOut: () => void;
 };
 
@@ -21,7 +23,7 @@ const NAV_ITEMS: { id: Page; label: string; icon: React.ComponentType<{ classNam
   { id: 'randevular', label: 'Randevular', icon: CalendarDays },
 ];
 
-export default function Layout({ currentPage, onNavigate, onOpenAdd, children, userEmail, onSignOut }: LayoutProps) {
+export default function Layout({ currentPage, onNavigate, onOpenAdd, children, userEmail, canInstallApp = false, onInstallApp, onSignOut }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [brandName, setBrandName] = useState('Trend Emlak Asistan?');
   const [brandAccent, setBrandAccent] = useState('#f0a83a');
@@ -186,6 +188,19 @@ export default function Layout({ currentPage, onNavigate, onOpenAdd, children, u
                 <Plus className="w-5 h-5" />
                 + Ekle
               </button>
+              {canInstallApp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onInstallApp?.();
+                  }}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:bg-slate-700"
+                >
+                  <Download className="h-4 w-4" />
+                  Telefona yükle
+                </button>
+              )}
             </div>
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
