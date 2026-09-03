@@ -18,6 +18,12 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [workspaceReady, setWorkspaceReady] = useState(false);
+  const [showBrandIntro, setShowBrandIntro] = useState(false);
+  const [introBrand, setIntroBrand] = useState<{
+    ofis_adi: string;
+    ana_renk: string;
+    logo_url: string;
+  } | null>(null);
   const [autoOpenAppointmentForm, setAutoOpenAppointmentForm] = useState(false);
   const [autoOpenTaskPicker, setAutoOpenTaskPicker] = useState(false);
 
@@ -83,10 +89,57 @@ export default function App() {
     };
   }, [session]);
 
+  useEffect(() => {
+    if (!session || !workspaceReady) return;
+    if (sessionStorage.getItem('show_brand_intro') !== '1') return;
+
+    let active = true;
+
+    const loadIntroBrand = async () => {
+      const { data, error } = await supabase.rpc('marka_profili_getir');
+
+      if (!active) return;
+
+      if (error) {
+        console.error('Marka intro bilgileri y?klenemedi:', error.message);
+        sessionStorage.removeItem('show_brand_intro');
+        return;
+      }
+
+      const profile = Array.isArray(data) ? data[0] : null;
+
+      if (!profile) {
+        sessionStorage.removeItem('show_brand_intro');
+        return;
+      }
+
+      setIntroBrand({
+        ofis_adi: profile.ofis_adi || 'Emlak Ofisi',
+        ana_renk: profile.ana_renk || '#c69214',
+        logo_url: profile.logo_url || '',
+      });
+
+      setShowBrandIntro(true);
+
+      window.setTimeout(() => {
+        if (!active) return;
+        setShowBrandIntro(false);
+        sessionStorage.removeItem('show_brand_intro');
+      }, 1800);
+    };
+
+    void loadIntroBrand();
+
+    return () => {
+      active = false;
+    };
+  }, [session, workspaceReady]);
+
   if (window.location.pathname === '/kendi-markani-gor') return <BrandPreview />;
   if (authLoading) return <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">Trend Emlak Asistanı yükleniyor...</div>;
   if (!session) return <Auth />;
   if (!workspaceReady) return <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">Ofis alanınız hazırlanıyor...</div>;
+  if (window.location.pathname === '/markam') return <BrandPreview />;
 
   const renderPage = () => {
     switch (currentPage) {
@@ -125,7 +178,43 @@ export default function App() {
   };
 
   return (
-    <Layout
+    <>
+      {showBrandIntro && introBrand && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/35 backdrop-blur-[2px]">
+          <div
+            className="mt-0 flex min-h-[50vh] w-full flex-col items-center justify-center px-6 py-10 text-center shadow-2xl animate-pulse"
+            style={{
+              background: `linear-gradient(135deg, ${introBrand.ana_renk}, #211a2d)`,
+            }}
+          >
+            {introBrand.logo_url ? (
+              <div className="mb-6 flex h-40 w-40 items-center justify-center overflow-hidden rounded-3xl bg-white/95 p-3 shadow-xl sm:h-52 sm:w-52">
+                <img
+                  src={introBrand.logo_url}
+                  alt={introBrand.ofis_adi}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-3xl bg-white/15 text-5xl font-black text-white shadow-xl">
+                {introBrand.ofis_adi.slice(0, 2).toUpperCase()}
+              </div>
+            )}
+
+            <p className="text-xs font-bold uppercase tracking-[0.35em] text-white/70">
+              Ho? geldiniz
+            </p>
+            <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl">
+              {introBrand.ofis_adi}
+            </h1>
+            <p className="mt-3 text-sm font-medium text-white/80">
+              Markan?z haz?r. G?nl?k sat?? asistan?n?z a??l?yor...
+            </p>
+          </div>
+        </div>
+      )}
+
+      <Layout
       currentPage={currentPage}
       onNavigate={setCurrentPage}
       onOpenAdd={() => {
@@ -147,5 +236,6 @@ export default function App() {
     >
       {renderPage()}
     </Layout>
+    </>
   );
 }

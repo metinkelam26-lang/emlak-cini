@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowRight, Check, ImagePlus, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const fallbackAccent = '#c69214';
 const maxImageSizeBytes = 10 * 1024 * 1024;
@@ -72,6 +73,7 @@ export default function BrandPreview() {
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const [accent, setAccent] = useState(fallbackAccent);
   const [advisorName, setAdvisorName] = useState('');
   const [officeName, setOfficeName] = useState('');
@@ -81,6 +83,10 @@ export default function BrandPreview() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [imageSize, setImageSize] = useState<number | null>(null);
   const [officeNameError, setOfficeNameError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [brandLoading, setBrandLoading] = useState(true);
+  const [brandSaving, setBrandSaving] = useState(false);
+  const [brandMessage, setBrandMessage] = useState<string | null>(null);
 
   const handleFile = useCallback(async (file?: File) => {
     if (!file || !file.type.startsWith('image/')) {
@@ -94,13 +100,64 @@ export default function BrandPreview() {
     }
 
     setUploadError(null);
-    if (logoUrl) URL.revokeObjectURL(logoUrl);
+    setSelectedLogoFile(file);
+    if (logoUrl && logoUrl.startsWith('blob:')) URL.revokeObjectURL(logoUrl);
     const nextUrl = URL.createObjectURL(file);
     setLogoUrl(nextUrl);
     setImageSize(file.size);
     setAccent(await extractAccent(file));
     setPreviewReady(false);
   }, [logoUrl]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadBrandProfile = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData.session;
+
+      if (!active) return;
+
+      setIsAuthenticated(Boolean(session));
+
+      if (!session) {
+        setBrandLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('marka_profili_getir');
+
+      if (!active) return;
+
+      if (error) {
+        console.error('Marka profili y?klenemedi:', error.message);
+        setBrandMessage('Marka bilgileri y?klenemedi.');
+        setBrandLoading(false);
+        return;
+      }
+
+      const profile = Array.isArray(data) ? data[0] : null;
+
+      if (profile) {
+        setAdvisorName(profile.danisman_adi || '');
+        setOfficeName(profile.ofis_adi || '');
+        setLicenseNo(profile.ttyb_no || '');
+        setAccent(profile.ana_renk || fallbackAccent);
+
+        if (profile.logo_url) {
+          setLogoUrl(profile.logo_url);
+        }
+      }
+
+      setBrandLoading(false);
+    };
+
+    void loadBrandProfile();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
@@ -275,27 +332,114 @@ export default function BrandPreview() {
 
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 const trimmed = officeName.trim();
+
                 if (!trimmed) {
-                  setOfficeNameError('Lütfen ofis adını girin.');
+                  setOfficeNameError('L?tfen ofis ad?n? girin.');
                   return;
                 }
+
                 if (trimmed.length > 120) {
-                  setOfficeNameError('Ofis adı en fazla 120 karakter olabilir.');
+                  setOfficeNameError('Ofis ad? en fazla 120 karakter olabilir.');
                   return;
                 }
+
                 setOfficeNameError(null);
-                sessionStorage.setItem('onboarding_ofis_adi', trimmed);
-                window.location.href = '/';
+                setBrandMessage(null);
+
+                if (!isAuthenticated) {
+                  sessionStorage.setItem('auth_return_to', '/kendi-markani-gor');
+                  window.location.href = '/';
+                  return;
+                }
+
+                setBrandSaving(true);
+
+                let persistentLogoUrl =
+                  logoUrl && !logoUrl.startsWith('blob:') ? logoUrl : '';
+
+                if (selectedLogoFile) {
+                  const { data: sessionData } = await supabase.auth.getSession();
+                  const userId = sessionData.session?.user.id;
+
+                  if (!userId) {
+                    setBrandSaving(false);
+                    setBrandMessage('Logo y?klemek i?in tekrar giri? yap?n.');
+                    return;
+                  }
+
+                  const rawExt = selectedLogoFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+                  const ext = /^[a-z0-9]+$/.test(rawExt) ? rawExt : 'jpg';
+                  const filePath = `${userId}/marka/logo-${Date.now()}.${ext}`;
+
+                  const { error: uploadError } = await supabase.storage
+                    .from('marka-dosyalari')
+                    .upload(filePath, selectedLogoFile, {
+                      cacheControl: '3600',
+                      upsert: false,
+                    });
+
+                  if (uploadError) {
+                    setBrandSaving(false);
+                    console.error('Marka logosu y?klenemedi:', uploadError.message);
+                    setBrandMessage('Logo y?klenemedi. L?tfen tekrar deneyin.');
+                    return;
+                  }
+
+                  const { data: publicData } = supabase.storage
+                    .from('marka-dosyalari')
+                    .getPublicUrl(filePath);
+
+                  persistentLogoUrl = publicData.publicUrl;
+                }
+
+                const { error } = await supabase.rpc('marka_profili_kaydet', {
+                  p_danisman_adi: advisorName.trim(),
+                  p_ofis_adi: trimmed,
+                  p_ttyb_no: licenseNo.trim(),
+                  p_ana_renk: accent,
+                  p_logo_url: persistentLogoUrl,
+                });
+
+                setBrandSaving(false);
+
+                if (error) {
+                  console.error('Marka profili kaydedilemedi:', error.message);
+                  setBrandMessage('Marka bilgileri kaydedilemedi. Lütfen tekrar deneyin.');
+                  return;
+                }
+                setSelectedLogoFile(null);
+                sessionStorage.setItem('show_brand_intro', '1');
+
+                window.setTimeout(() => {
+                  window.location.href = '/';
+                }, 700);
+
+                setBrandMessage('Markanız başarıyla kaydedildi.');
               }}
-              className="mt-4 inline-flex w-full max-w-xl items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 font-bold transition hover:brightness-95"
+              disabled={brandSaving || brandLoading}
+              className="mt-4 inline-flex w-full max-w-xl items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 font-bold transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
               style={{ borderColor: accent, color: accent }}
             >
               <Sparkles className="h-5 w-5" />
-              Markamla ücretsiz başla
+              {brandSaving
+                ? 'Kaydediliyor...'
+                : isAuthenticated
+                  ? 'Markamı Kaydet'
+                  : 'Ücretsiz Hesap Oluştur'}
               <ArrowRight className="h-4 w-4" />
             </button>
+
+            {brandMessage && (
+              <p className={`mt-3 max-w-xl rounded-lg px-3 py-2 text-sm font-medium ${
+                brandMessage.includes('başarıyla')
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-red-50 text-red-700'
+              }`}>
+                {brandMessage}
+              </p>
+            )}
           </section>
 
           <section className="mx-auto w-full max-w-[360px]">
