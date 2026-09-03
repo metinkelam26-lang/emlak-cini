@@ -210,7 +210,7 @@ export default function App() {
             )}
 
             <p className="text-xs font-bold uppercase tracking-[0.35em] text-white/70">
-              Ho? geldiniz
+              Hoş geldiniz
             </p>
             <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl">
               {introBrand.ofis_adi}
