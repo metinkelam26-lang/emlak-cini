@@ -1,0 +1,25 @@
+{
+  "name": "Trend Emlak Asistanı",
+  "short_name": "Trend Emlak",
+  "description": "Gayrimenkul danışmanları için günlük satış asistanı.",
+  "lang": "tr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbf8f2",
+  "theme_color": "#211a2d",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
