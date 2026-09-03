@@ -125,7 +125,7 @@ export default function App() {
         if (!active) return;
         setShowBrandIntro(false);
         sessionStorage.removeItem('show_brand_intro');
-      }, 1800);
+      }, 3000);
     };
 
     void loadIntroBrand();
@@ -182,7 +182,7 @@ export default function App() {
       {showBrandIntro && introBrand && (
         <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/35 backdrop-blur-[2px]">
           <div
-            className="mt-0 flex min-h-[50vh] w-full flex-col items-center justify-center px-6 py-10 text-center shadow-2xl animate-pulse"
+            className="mt-0 flex min-h-[75vh] w-full flex-col items-center justify-center px-6 py-12 text-center shadow-2xl animate-pulse"
             style={{
               background: `linear-gradient(135deg, ${introBrand.ana_renk}, #211a2d)`,
             }}
