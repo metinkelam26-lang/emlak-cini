@@ -13,10 +13,17 @@ import BrandPreview from '@/pages/BrandPreview';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
+type InstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+};
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
   const [workspaceReady, setWorkspaceReady] = useState(false);
   const [showBrandIntro, setShowBrandIntro] = useState(false);
   const [introBrand, setIntroBrand] = useState<{
@@ -31,6 +38,20 @@ export default function App() {
     void supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthLoading(false); });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
     return () => listener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || navigatorWithStandalone.standalone === true;
+    setIsInstalled(standalone);
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setDeferredInstallPrompt(event as InstallPromptEvent);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
   useEffect(() => {
@@ -149,6 +170,23 @@ export default function App() {
   if (!workspaceReady) return <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">Ofis alanınız hazırlanıyor...</div>;
   if (window.location.pathname === '/markam') return <BrandPreview />;
 
+  const handleInstallApp = async () => {
+    if (deferredInstallPrompt) {
+      await deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      if (outcome === 'accepted') setIsInstalled(true);
+      setDeferredInstallPrompt(null);
+      return;
+    }
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    window.alert(
+      isIOS
+        ? 'Safari paylaşım simgesine dokunup “Ana Ekrana Ekle” seçeneğini kullanın.'
+        : 'Tarayıcı menüsünden “Uygulamayı yükle” veya “Ana ekrana ekle” seçeneğini kullanın.',
+    );
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'ilanlar':
@@ -230,6 +268,8 @@ export default function App() {
         setCurrentPage('gorevler');
       }}
       userEmail={session.user.email}
+      canInstallApp={!isInstalled}
+      onInstallApp={() => void handleInstallApp()}
       onSignOut={async () => {
         try {
           const { error } = await supabase.auth.signOut();
