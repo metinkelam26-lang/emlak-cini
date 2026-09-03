@@ -274,8 +274,6 @@ export default function Customers() {
           ilan,
           score,
           reasons,
-          budgetDistance: 0,
-          areaDistance: 0,
         };
       })
     : [];
