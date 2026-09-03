@@ -410,7 +410,6 @@ export default function BrandPreview() {
                   return;
                 }
                 setSelectedLogoFile(null);
-                sessionStorage.setItem('show_brand_intro', '1');
 
                 window.setTimeout(() => {
                   window.location.href = '/';

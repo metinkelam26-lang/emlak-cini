@@ -91,9 +91,12 @@ export default function App() {
 
   useEffect(() => {
     if (!session || !workspaceReady) return;
-    if (sessionStorage.getItem('show_brand_intro') !== '1') return;
+
+    // Marka ayar ekranindayken intro gosterme.
+    if (window.location.pathname === '/markam') return;
 
     let active = true;
+    let timer: number | undefined;
 
     const loadIntroBrand = async () => {
       const { data, error } = await supabase.rpc('marka_profili_getir');
@@ -102,14 +105,19 @@ export default function App() {
 
       if (error) {
         console.error('Marka intro bilgileri y?klenemedi:', error.message);
-        sessionStorage.removeItem('show_brand_intro');
         return;
       }
 
       const profile = Array.isArray(data) ? data[0] : null;
 
-      if (!profile) {
-        sessionStorage.removeItem('show_brand_intro');
+      // Eski hesaplarda marka kurulumu tamamlanmamissa once /markam.
+      // Logo/kartvizit marka kurulumunun tamamlandigini gosteren kriter.
+      const hasBrand =
+        Boolean(profile?.ofis_adi?.trim()) &&
+        Boolean(profile?.logo_url?.trim());
+
+      if (!profile || !hasBrand) {
+        window.location.href = '/markam';
         return;
       }
 
@@ -121,10 +129,9 @@ export default function App() {
 
       setShowBrandIntro(true);
 
-      window.setTimeout(() => {
+      timer = window.setTimeout(() => {
         if (!active) return;
         setShowBrandIntro(false);
-        sessionStorage.removeItem('show_brand_intro');
       }, 3000);
     };
 
@@ -132,6 +139,7 @@ export default function App() {
 
     return () => {
       active = false;
+      if (timer) window.clearTimeout(timer);
     };
   }, [session, workspaceReady]);
 
