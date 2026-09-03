@@ -55,11 +55,17 @@ export default function App() {
     const initializeWorkspace = async () => {
       setWorkspaceReady(false);
 
+      const onboardingOfficeName = sessionStorage.getItem('onboarding_ofis_adi');
+
       try {
-        const { error } = await supabase.rpc('baslat_ofis');
+        const { error } = onboardingOfficeName
+          ? await supabase.rpc('baslat_ofis', { ofis_adi: onboardingOfficeName })
+          : await supabase.rpc('baslat_ofis');
 
         if (error) {
           console.error('Ofis başlatılamadı, uygulama sorunsuz şekilde açılacak:', error.message);
+        } else if (onboardingOfficeName) {
+          sessionStorage.removeItem('onboarding_ofis_adi');
         }
       } catch (error) {
         console.error('Ofis başlatma akışı hata verdi, uygulama devam ediyor:', error);

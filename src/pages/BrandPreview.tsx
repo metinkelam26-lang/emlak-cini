@@ -80,6 +80,7 @@ export default function BrandPreview() {
   const [dragging, setDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [imageSize, setImageSize] = useState<number | null>(null);
+  const [officeNameError, setOfficeNameError] = useState<string | null>(null);
 
   const handleFile = useCallback(async (file?: File) => {
     if (!file || !file.type.startsWith('image/')) {
@@ -265,6 +266,36 @@ export default function BrandPreview() {
                 Önizleme sağdaki telefonda hazır. Gerçek WhatsApp mesajı gönderilmedi.
               </p>
             )}
+
+            {officeNameError && (
+              <p className="mt-3 max-w-xl rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                {officeNameError}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const trimmed = officeName.trim();
+                if (!trimmed) {
+                  setOfficeNameError('Lütfen ofis adını girin.');
+                  return;
+                }
+                if (trimmed.length > 120) {
+                  setOfficeNameError('Ofis adı en fazla 120 karakter olabilir.');
+                  return;
+                }
+                setOfficeNameError(null);
+                sessionStorage.setItem('onboarding_ofis_adi', trimmed);
+                window.location.href = '/';
+              }}
+              className="mt-4 inline-flex w-full max-w-xl items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 font-bold transition hover:brightness-95"
+              style={{ borderColor: accent, color: accent }}
+            >
+              <Sparkles className="h-5 w-5" />
+              Markamla ücretsiz başla
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </section>
 
           <section className="mx-auto w-full max-w-[360px]">

@@ -1,9 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Building2, Loader2, LogIn, Sparkles, UserPlus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function Auth() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [onboardingOfficeName, setOnboardingOfficeName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('onboarding_ofis_adi');
+    if (stored) {
+      setOnboardingOfficeName(stored);
+      setMode('signup');
+    }
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
