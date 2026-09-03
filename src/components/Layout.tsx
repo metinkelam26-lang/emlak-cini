@@ -134,6 +134,20 @@ export default function Layout({ currentPage, onNavigate, onOpenAdd, children, u
                 </button>
               );
             })}
+            <div className="mt-2 border-t border-slate-700 px-4 py-3">
+              {userEmail && <p className="mb-2 truncate text-xs text-slate-400" title={userEmail}>{userEmail}</p>}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  onSignOut();
+                }}
+                className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-sm font-medium text-slate-200 hover:bg-slate-700 hover:text-white"
+              >
+                <LogOut className="h-5 w-5" />
+                Çıkış yap
+              </button>
+            </div>
           </nav>
         </div>
       )}
