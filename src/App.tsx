@@ -104,7 +104,7 @@ export default function App() {
       if (!active) return;
 
       if (error) {
-        console.error('Marka intro bilgileri y?klenemedi:', error.message);
+        console.error('Marka intro bilgileri yüklenemedi:', error.message);
         return;
       }
 
@@ -216,7 +216,7 @@ export default function App() {
               {introBrand.ofis_adi}
             </h1>
             <p className="mt-3 text-sm font-medium text-white/80">
-              Markan?z haz?r. G?nl?k sat?? asistan?n?z a??l?yor...
+              Markanız hazır. Günlük satış asistanınız açılıyor...
             </p>
           </div>
         </div>

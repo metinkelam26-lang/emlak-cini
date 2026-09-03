@@ -42,7 +42,7 @@ const [email, setEmail] = useState('');
       }
 
       if (mode === 'signup' && !result.data.session) {
-        setMessage('Kay?t olu?turuldu. Gelen e-postadaki onay linkine t?klay?n. Onaydan sonra marka olu?turma ekran?n?z a??lacak.');
+        setMessage('Kayıt oluşturuldu. Gelen e-postadaki onay linkine tıklayın. Onaydan sonra marka oluşturma ekranınız açılacak.');
       }
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : 'İşlem sırasında bir hata oluştu.';

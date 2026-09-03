@@ -130,8 +130,8 @@ export default function BrandPreview() {
       if (!active) return;
 
       if (error) {
-        console.error('Marka profili y?klenemedi:', error.message);
-        setBrandMessage('Marka bilgileri y?klenemedi.');
+        console.error('Marka profili yüklenemedi:', error.message);
+        setBrandMessage('Marka bilgileri yüklenemedi.');
         setBrandLoading(false);
         return;
       }
@@ -336,7 +336,7 @@ export default function BrandPreview() {
                 const trimmed = officeName.trim();
 
                 if (!trimmed) {
-                  setOfficeNameError('L?tfen ofis ad?n? girin.');
+                  setOfficeNameError('Lütfen ofis adını girin.');
                   return;
                 }
 
@@ -365,7 +365,7 @@ export default function BrandPreview() {
 
                   if (!userId) {
                     setBrandSaving(false);
-                    setBrandMessage('Logo y?klemek i?in tekrar giri? yap?n.');
+                    setBrandMessage('Logo yüklemek için tekrar giriş yapın.');
                     return;
                   }
 
@@ -382,8 +382,8 @@ export default function BrandPreview() {
 
                   if (uploadError) {
                     setBrandSaving(false);
-                    console.error('Marka logosu y?klenemedi:', uploadError.message);
-                    setBrandMessage('Logo y?klenemedi. L?tfen tekrar deneyin.');
+                    console.error('Marka logosu yüklenemedi:', uploadError.message);
+                    setBrandMessage('Logo yüklenemedi. Lütfen tekrar deneyin.');
                     return;
                   }
 
