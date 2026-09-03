@@ -5,6 +5,13 @@
 - Kullanıcıya az veri girişi ve 1–2 dokunuşta sonuç hedefi.
 - İlk faz deterministik; AI sonraki faz.
 
+## Güven ve Doğruluk İlkesi
+
+- Yanlış müşteri, eksik cevap veya uydurulmuş bilgi emlakçının güvenini sıfırlar.
+- İlk WhatsApp asistanı az özellik sunacak; yalnız mevcut veriden kesin cevap üreten komutları işleyecek.
+- Veri yoksa veya belirsizse asistan tahmin yapmayacak; “bulamadım” ya da “netleştir” diyecek.
+- Her aksiyon, doğru müşteri ve ofis bağlamı doğrulandıktan sonra oluşturulacak.
+
 ## Ana Kullanıcı Deneyimi
 - Ana ekran: “Bugün ne yapmalısın?” / Aksiyon Bekleyenler.
 - Kullanıcı çoğunlukla sonuç işaretler: ulaşamadım, görüştüm, randevu oluştu, görüşüldü, ertelendi, iptal, ilan gösterildi.
