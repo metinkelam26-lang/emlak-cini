@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Trend Emlak Asistanı">
+  <rect width="512" height="512" rx="112" fill="#211a2d"/>
+  <path d="M94 244 256 104l162 140v156c0 23-19 42-42 42H136c-23 0-42-19-42-42V244Z" fill="#f0a83a"/>
+  <path d="M152 254h208v146c0 9-7 16-16 16H168c-9 0-16-7-16-16V254Z" fill="#fff8e8"/>
+  <path d="M214 416V312h84v104M184 286h42v42h-42zM286 286h42v42h-42z" fill="#211a2d"/>
+  <path d="M256 104 94 244h55l107-93 107 93h55L256 104Z" fill="#fff8e8"/>
+</svg>
